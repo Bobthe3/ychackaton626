@@ -3,8 +3,12 @@
 > *"Meta TRIBE for virality."* Read people's brains while they watch short-form
 > content, then predict what makes a video go viral for a given audience.
 
-**Owner:** Holly (operator / pitch / narrative)
-**Build:** Devan (platform + live brainwave viz), Holly (prediction layer), Yuva (hardware + data)
+**Team:**
+- **Holly** — operator + full-stack build → prediction-layer UI (Screen 2), content selection
+- **Devan** — full-stack → platform + live brainwave viz (Screen 1)
+- **Yuva** — pitch & narrative, demo choreography
+- **Hardware / data owner** — *TBD* (EEG capture + S3); ask Shree re: firmware/tracking UI
+
 **Event:** YC Hackathon — ~3 days out. Two tracks targeted: *Reading Minds* + *Algorithm Hacking*.
 
 ---
@@ -97,7 +101,30 @@ first, then both sides build fully in parallel.
 }
 ```
 
-## 7. Scope — build vs cut (1-day reality)
+## 7. Tech stack
+
+Two processes, one contract (the §6 schema). **UI in TS, hardware + model in Python**, wired
+over WebSocket (live waveform) + S3/HTTP (data). Every choice maps to an owner in §8.
+
+| Layer | Choice | Owner | Why |
+| --- | --- | --- | --- |
+| **Both screens (UI)** | Next.js (App Router) + TypeScript + Tailwind + shadcn/ui | Holly + Devan | Fast to build, both already full-stack in JS |
+| **Live EEG chart (Screen 1)** | uPlot (or raw canvas) over a **WebSocket** | Devan | Handles high-frequency streams smoothly; ~5ms + buffer |
+| **Prediction UI (Screen 2)** | Same Next.js app, separate route | Holly | One repo, one deploy |
+| **Hardware bridge** | Python service + EEG SDK (BrainFlow / device SDK) | Yuva | EEG SDKs are Python; computes `p300_amplitude` / `interest_score`, emits §6 schema |
+| **Realtime transport** | WebSocket (Python → browser) | Yuva + Devan | Push brainwaves live to Screen 1 |
+| **Raw data store** | **S3** (already in use) | Yuva | Fallback demo data lives here too |
+| **Session/content/feedback DB** | Supabase (Postgres) — or SQLite if offline | Devan | Quick to stand up; dashboards for free |
+| **Model — blueprint generation** | **Claude API** (`claude-opus-4-8`), neural-pattern summary as context | Holly | LLM turns "this audience + these spikes" → director's cut |
+| **Model — interest classifier (optional)** | scikit-learn / LightGBM on (content features × neural response) | Holly | Lightweight; fine-tune story for the pitch |
+| **Deploy** | Vercel (UI) + a small box/Render for the Python service | Devan | Demo-ready URLs |
+| **Build accelerant** | Claude Code | all | Transcript plan — lean on it for the unfamiliar ML parts |
+
+**The one real decision:** keep hardware + model in **Python** (SDKs + fine-tuning live there)
+and the two screens in **Next.js/TS** — two processes talking over WS/HTTP. Don't try to do EEG
+or fine-tuning in JS.
+
+## 8. Scope — build vs cut (1-day reality)
 
 | Build (must-have for demo) | Cut / fake for now |
 | --- | --- |
@@ -110,18 +137,20 @@ first, then both sides build fully in parallel.
 **Model:** fine-tune an existing dataset alongside fresh neural data (training ~10–24 hrs).
 Collect fresh scrolling data **before** the event; if time runs out, demo on S3 data.
 
-## 8. Work division
+## 9. Work division
 
 | Owner | Owns | Deliverable |
 | --- | --- | --- |
-| **Holly** (operator) | PRD, pitch & narrative, demo choreography, content selection, **prediction-layer UI (Screen 2)** | The story + the blueprint screen |
+| **Holly** (operator) | **Prediction-layer UI (Screen 2)**, content selection | The blueprint screen + curated content |
 | **Devan** | Trimmed platform, **live brainwave viz (Screen 1)**, capture integration | The live-capture front |
-| **Yuva** | Headset hardware, real-time data streams, derisking | Reliable EEG stream |
+| **Yuva** | **Pitch & narrative**, demo choreography, on-stage storytelling | The winning story |
+| **Hardware owner (TBD)** | Headset, real-time data streams, derisking | Reliable EEG stream (must not break) |
 
-**Why this split:** only one integration point (the schema in §6). Holly builds the screen that
-tells the story she's pitching; Devan owns capture/viz; Yuva owns the hardware that must not break.
+**Why this split:** only one integration point (the schema in §6). Holly + Devan each own one
+vertical (one screen each) so they don't overlap; Yuva drives the pitch; hardware is its own
+job because "don't break on stage" is the top risk (§11).
 
-## 9. Timeline (3 days)
+## 10. Timeline (3 days)
 
 - **T-3 (today):** lock this PRD + data schema. Holly drafts pitch. Yuva confirms hardware.
 - **T-2 (tomorrow, 12:00–5:00 @ house):** collect scrolling neural data on ourselves
@@ -129,17 +158,17 @@ tells the story she's pitching; Devan owns capture/viz; Yuva owns the hardware t
 - **T-1:** integrate Screen 1 ↔ Screen 2 over the schema. Fine-tune finishes. Curate content.
 - **Hackathon day:** rehearse demo ≥3×, derisk hardware, finalize pitch.
 
-## 10. Risks & derisking
+## 11. Risks & derisking
 
 | Risk | Mitigation |
 | --- | --- |
 | **Hardware breaks live** (top risk) | Rehearse on-device ≥3×; pre-recorded S3 fallback ready |
 | No scrolling data yet | Collect on ourselves T-2 (12–5 session) |
 | Real-time jitter | ~5ms latency + time buffer to smooth the viz |
-| Two devs overlap | Vertical split + single schema contract (§6, §8) |
+| Two devs overlap | Vertical split + single schema contract (§6, §9) |
 | Neither dev has fine-tuned before | Fine-tune (not train); pair on it; lean on Claude Code |
 
-## 11. Open questions
+## 12. Open questions
 
 - [ ] Confirm hackathon eligibility / apply (Holly to DM organizers).
 - [ ] Where does the brainwave/firmware tracking UI live? (Devan → ask Shree.)
