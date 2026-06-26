@@ -115,7 +115,7 @@ over WebSocket (live waveform) + S3/HTTP (data). Every choice maps to an owner i
 | **Realtime transport** | WebSocket (Python → browser) | Yuva + Devan | Push brainwaves live to Screen 1 |
 | **Raw data store** | **S3** (already in use) | Yuva | Fallback demo data lives here too |
 | **Session/content/feedback DB** | Supabase (Postgres) — or SQLite if offline | Devan | Quick to stand up; dashboards for free |
-| **Model — blueprint generation** | **Claude API** (`claude-opus-4-8`), neural-pattern summary as context | Holly | LLM turns "this audience + these spikes" → director's cut |
+| **Model — blueprint generation** | **OpenAI API** (GPT-5 / latest available), neural-pattern summary as context | Holly | LLM turns "this audience + these spikes" → director's cut. **OpenAI = sponsor** → eligible for sponsor prize + API credits |
 | **Model — interest classifier (optional)** | scikit-learn / LightGBM on (content features × neural response) | Holly | Lightweight; fine-tune story for the pitch |
 | **Deploy** | Vercel (UI) + a small box/Render for the Python service | Devan | Demo-ready URLs |
 | **Build accelerant** | Claude Code | all | Transcript plan — lean on it for the unfamiliar ML parts |
