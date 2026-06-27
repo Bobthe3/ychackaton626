@@ -173,7 +173,7 @@ to see *why* → feature walkthrough → **judge interaction** (Aaron/Sarah wear
 | **Live waveform** | uPlot or raw `<canvas>` over **WebSocket** | Holly (Devan feeds it) | Smooth high-frequency stream |
 | **EEG bridge** | Python + OpenBCI / BrainFlow SDK → **WebSocket** | **Devan** | EEG SDKs are Python; computes theta/beta + interest_score |
 | **Video + characteristics API** | **Cloudflare** (Workers/R2) serving MP4 + §6 schema | **Devan** | One API, precomputed offline |
-| **Chat / decode API** | **GPT-realtime (OpenAI — sponsor)**; system prompt = video data + waveform | **Devan** | Decodes "this audience + these spikes" → plain language. Sponsor prize + credits |
+| **Chat / decode API** | **GPT-realtime (OpenAI — sponsor)**; system prompt = video data + waveform | **Holly** (Devan supplies waveform + decode semantics) | Lives in Holly's Screen 2 chat UI; front-end calls OpenAI. Devan provides "what a theta/beta spike means" for the prompt. Sponsor prize + credits |
 | **Model: video → waveform** | Fine-tune on requested dataset **if it arrives**, else simulate | **Devan** | Demo-grade; see §10 |
 | **Color profile extraction** | ffmpeg + simple avg-color-per-scene script | Devan (Holly renders) | Cheap, visually striking |
 | **Deploy** | Vercel (UI) + small box/Render (Python EEG server runs local on demo machine) | Devan | Demo URLs; EEG must be local to the headset |
