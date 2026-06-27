@@ -131,7 +131,7 @@ against mocks.
   "characteristics": {
     "audio": "music + VO",                 // short string
     "transcript_summary": "...",           // 1–3 lines (incl. a title you can show)
-    "color_profile": ["#e8c9a0", "#c97b4a"], // hex per scene → render the bar
+    // color_profile is NOT here — Holly extracts it client-side, keyed by video_id (see note below)
     "cut_count": 7,
     "on_screen_text": "you NEED this"
   },
@@ -141,9 +141,9 @@ against mocks.
   }
 }
 ```
-> ⚠️ `color_profile` is YOUR output (§6 — you extract it). Decide: do you POST it back to Devan
-> to merge into this payload, or keep it client-side keyed by `video_id`? **Client-side keyed by
-> `video_id` is simpler — recommend that.**
+> ✅ **DECIDED:** `color_profile` is YOUR output (§6 — you extract it) and stays **client-side,
+> keyed by `video_id`**. You do NOT POST it back to Devan; his payload above may omit it. Keep a
+> local `colorProfiles[video_id] -> string[]` map and merge at render time.
 
 ### 3b. EEG stream — WebSocket (Devan's Python server → you)
 Connect to `ws://localhost:<port>`; receive a message per sample:
@@ -193,6 +193,6 @@ Devan gives you the **interpretation rules**; you assemble the prompt + stream t
 
 - [ ] EEG WebSocket: port, sample rate, are `video_id`/`video_t_ms` set per sample?
 - [ ] Can he give me a **recorded EEG `.jsonl`** + a `videos.json` mock today?
-- [ ] `color_profile`: client-side keyed by `video_id` (my preference) or merge server-side?
+- [x] ~~`color_profile`~~ — DECIDED: client-side, keyed by `video_id` (Devan's payload omits it).
 - [ ] Decode semantics for the chat system prompt — what does a theta/beta spike "mean"?
 - [ ] Demo-day data: live capture vs pre-recorded? (affects whether I wire the live WS or replay)
