@@ -4,9 +4,9 @@
 > a little satirical. Hard-cap the length and rehearse.
 
 **Who delivers what**
-- **Yuva** — the narrative / storyline (intro hook → scale payoff → business close) **+ the judge
-  interaction (Aaron/Sarah)**. Main voice.
-- **Devan** — product feature walkthrough (incl. the sponsor-video flex).
+- **Yuva** — the narrative / storyline (intro hook → scale payoff → business close), **the judge
+  interaction (Aaron/Sarah)**, and **the sponsor-video easter egg (§2)**. Main voice.
+- **Devan** — the product feature walkthrough (mainly the product).
 - **Holly** — wears the EEG headset the whole time (visual hook); demos the screens; **delivers the
   Fiber API / GTM closing beat (§6)**.
 
@@ -22,15 +22,19 @@
 - Alt framing (optional): *"We're B2B founders with no clue about growth beyond numbers, so we
   built a device to actually see it."*
 
-## 2. What we built — **Devan** (walkthrough), Yuva (hero framing)
+## 2. What we built — **Devan** (the product)
 - *"We wore the device for the whole hackathon and watched a lot of videos — honestly the easy
   part."*
 - **Devan walks the product:** the 3 screens — live scroll + live brainwave, the per-video
   analysis, the session report. Show the waveform **spiking on a hook, flat on a boring beat**.
-- **Sponsor-video flex (easter egg):** *"…and we even ran your **own** launch videos through it —
-  here's why Codex's / Cursor's hook lands, and where it loses people."* Judges recognize their own
-  content → the room leans in. Keep it to **1–2 sponsor clips**; the real demo dataset is actual
-  Tech UGC, not these (they're landscape product videos, off-format — see PRD content note).
+  Devan carries the product explanation.
+
+## 2b. Sponsor-video flex (easter egg) — **Yuva**
+- Yuva jumps in: *"…and we even ran your **own** launch videos through it — here's why Codex's /
+  Cursor's hook lands, and where it loses people."* Judges recognize their own content → the room
+  leans in.
+- Keep it to **1–2 sponsor clips**; the real demo dataset is actual Tech UGC, not these (they're
+  landscape product videos, off-format — see PRD content note).
 
 ## 3. Judge interaction — **Yuva**  *(the differentiator — few teams will do this)*
 - *"But we got curious — what do the **judges** like?"* → ask **Aaron** to put on the headset,
