@@ -195,7 +195,7 @@ honest, on-narrative use is **our own go-to-market**, as a 10-second closing bea
 | **Model: video → waveform** | Fine-tune on requested dataset **if it arrives**, else simulate | **Devan** | Demo-grade; see §10 |
 | **Color profile extraction** | ffmpeg + simple avg-color-per-scene script | **Holly** | Cheap, visually striking; Holly renders it anyway, so she owns extraction too |
 | **Deploy** | Vercel (UI) + small box/Render (Python EEG server runs local on demo machine) | Devan | Demo URLs; EEG must be local to the headset |
-| **GTM list (bonus)** | **Fiber AI (sponsor)** — one `peopleSearch` for Heads of Growth/Marketing at UGC brands; `x-api-key` auth | **Yuva** | Closing easter egg only (see §3), **not** in the product. Can be pulled once offline for a slide. Cut if pitch runs long |
+| **GTM list (bonus)** | **Fiber AI (sponsor)** — one `peopleSearch` for Heads of Growth/Marketing at UGC brands; `x-api-key` auth | **Holly** | Closing easter egg only (see §3); Holly delivers it. **Not** in the product. Can be pulled once offline for a slide. Cut if pitch runs long |
 | **Build accelerant** | Claude Code | all | Lean on it for ML / unfamiliar parts |
 
 **One real decision:** UI in **Next.js/TS**, EEG + model in **Python**, talking over **WebSocket**

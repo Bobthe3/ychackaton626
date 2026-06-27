@@ -6,8 +6,9 @@
 **Who delivers what**
 - **Yuva** — the narrative / storyline (intro hook → scale payoff → business close) **+ the judge
   interaction (Aaron/Sarah)**. Main voice.
-- **Devan** — product feature walkthrough.
-- **Holly** — wears the EEG headset the whole time (visual hook); demos the screens on cue.
+- **Devan** — product feature walkthrough (incl. the sponsor-video flex).
+- **Holly** — wears the EEG headset the whole time (visual hook); demos the screens; **delivers the
+  Fiber API / GTM closing beat (§6)**.
 
 ---
 
@@ -26,6 +27,10 @@
   part."*
 - **Devan walks the product:** the 3 screens — live scroll + live brainwave, the per-video
   analysis, the session report. Show the waveform **spiking on a hook, flat on a boring beat**.
+- **Sponsor-video flex (easter egg):** *"…and we even ran your **own** launch videos through it —
+  here's why Codex's / Cursor's hook lands, and where it loses people."* Judges recognize their own
+  content → the room leans in. Keep it to **1–2 sponsor clips**; the real demo dataset is actual
+  Tech UGC, not these (they're landscape product videos, off-format — see PRD content note).
 
 ## 3. Judge interaction — **Yuva**  *(the differentiator — few teams will do this)*
 - *"But we got curious — what do the **judges** like?"* → ask **Aaron** to put on the headset,
@@ -54,11 +59,13 @@
 - The kicker: ***"Stop spraying and praying. Use science to go viral"*** — *"so your friends
   don't clown you (get less chopped) for not going viral."*
 
-## 6. Closing easter egg — Fiber AI (optional, ~10s) — **Yuva**
-- Only if there's time: *"And who do we sell this to? We used **Fiber** (a sponsor) to pull the
-  Heads of Growth at UGC brands — there's our outbound list. We know what goes viral; Fiber tells
-  us who to sell it to."*
-- One slide, one line. Sponsor eligibility without muddling the story. **First thing to cut if long.**
+## 6. Closing easter egg — Fiber AI / GTM (optional, ~15s) — **Holly**
+- Holly closes: *"And who do we sell this to? We used **Fiber** (a sponsor) — literally one
+  `peopleSearch` call — to pull the Heads of Growth at UGC brands. That's our outbound list. We know
+  what goes viral; Fiber tells us who to sell it to."*
+- Holly can flash the **actual API call** (`peopleSearch`, `x-api-key`) on screen for ~2s as proof
+  we really used it — ties the sponsor in concretely.
+- One slide, one call. Sponsor eligibility without muddling the story. **First thing to cut if long.**
 - ⚠️ Do **not** pitch Fiber as "find/recruit the creator" — the people in our clips are founders,
   and editors aren't in a B2B database. GTM is the only honest fit.
 
