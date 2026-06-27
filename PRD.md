@@ -182,6 +182,36 @@ to see *why* → feature walkthrough → **judge interaction** (Aaron/Sarah wear
 **One real decision:** UI in **Next.js/TS**, EEG + model in **Python**, talking over **WebSocket**
 (live waveform) + **HTTP** (video/chat). Don't do EEG or fine-tuning in JS.
 
+### Planned repo structure (to BUILD at the hackathon — no code committed yet)
+
+> ⚠️ This is the *target* layout we'll create **during** the event, not pre-written code.
+
+```
+ychackaton626/
+├── contracts/                  SHARED — the §6 schema. Lock once; changing it = ping the other.
+│   ├── video.schema.json         video payload (Cloudflare → front-end)
+│   ├── eeg-sample.schema.json    EEG sample (Python WS → front-end)
+│   └── mocks/                    videos.json + eeg-sample.jsonl (build against these)
+│
+├── frontend/   ── Holly ──      Next.js + TS — everything the judges look at
+│   ├── app/live | log | report/  the 3 demo screens
+│   ├── components/               Waveform · ColorBar · CharacteristicsPanel · VideoCard
+│   ├── lib/                      types · api · ws · openai (chat/decode)
+│   └── scripts/extract-color     color_profile extraction
+│
+├── backend/    ── Devan ──      Python — EEG, data, model
+│   ├── eeg_server/               OpenBCI/BrainFlow → theta/beta → WebSocket
+│   ├── precompute/               offline characteristics for the 50 clips
+│   ├── cloudflare/               GET /api/videos (Video schema) + R2 MP4s
+│   └── model/                    fine-tune / simulate video → waveform
+│
+└── PRD.md · prd-holly.md · transcript.md · README.md
+```
+
+**Merge discipline:** **Holly** only edits `frontend/`, **Devan** only edits `backend/`, both agree
+on `contracts/` once. No overlapping files = no merge conflicts. Work on separate branches
+(`holly-frontend`, `devan-backend`) → PR into `main`.
+
 ## 8. Scope — build vs cut (2-day reality)
 
 | Build (must-have) | Cut / fake for now |
