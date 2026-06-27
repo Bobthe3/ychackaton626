@@ -4,8 +4,9 @@
 > a little satirical. Hard-cap the length and rehearse.
 
 **Who delivers what**
-- **Yuva** — the narrative / storyline (intro hook → scale payoff → business close). Main voice.
-- **Devan** — product feature walkthrough + the judge interaction (Aaron/Sarah).
+- **Yuva** — the narrative / storyline (intro hook → scale payoff → business close) **+ the judge
+  interaction (Aaron/Sarah)**. Main voice.
+- **Devan** — product feature walkthrough.
 - **Holly** — wears the EEG headset the whole time (visual hook); demos the screens on cue.
 
 ---
@@ -26,7 +27,7 @@
 - **Devan walks the product:** the 3 screens — live scroll + live brainwave, the per-video
   analysis, the session report. Show the waveform **spiking on a hook, flat on a boring beat**.
 
-## 3. Judge interaction — **Devan**  *(the differentiator — few teams will do this)*
+## 3. Judge interaction — **Yuva**  *(the differentiator — few teams will do this)*
 - *"But we got curious — what do the **judges** like?"* → ask **Aaron** to put on the headset,
   watch a couple clips.
 - Show **altered iterations** of similar clips (different visual elements, talking speed, text,
