@@ -54,6 +54,14 @@
 - The kicker: ***"Stop spraying and praying. Use science to go viral"*** — *"so your friends
   don't clown you (get less chopped) for not going viral."*
 
+## 6. Closing easter egg — Fiber AI (optional, ~10s) — **Yuva**
+- Only if there's time: *"And who do we sell this to? We used **Fiber** (a sponsor) to pull the
+  Heads of Growth at UGC brands — there's our outbound list. We know what goes viral; Fiber tells
+  us who to sell it to."*
+- One slide, one line. Sponsor eligibility without muddling the story. **First thing to cut if long.**
+- ⚠️ Do **not** pitch Fiber as "find/recruit the creator" — the people in our clips are founders,
+  and editors aren't in a B2B database. GTM is the only honest fit.
+
 ---
 
 ## Open items before stage

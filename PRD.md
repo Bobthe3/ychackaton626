@@ -53,6 +53,24 @@ better for a demo.
 to see *why* → feature walkthrough → **judge interaction** (Aaron/Sarah wear it, compare taste)
 → more data = more accuracy → *"stop spraying and praying, use science."*
 
+### Closing easter egg — Fiber AI as our GTM (sponsor bonus, NOT a product feature)
+
+Fiber is a B2B prospecting/recruiting database — it finds **business decision-makers**, not the
+(usually anonymous) editors behind a viral clip. So it does **not** fit inside the product. Its one
+honest, on-narrative use is **our own go-to-market**, as a 10-second closing beat:
+
+> *"So who buys NeuroViral? We used Fiber (a sponsor) to pull the Heads of Growth / Marketing at
+> the companies that run UGC — that's our outbound list. We know what makes content go viral; Fiber
+> tells us who to sell that to."*
+
+- **What it is:** one `peopleSearch` for "Head of Growth/Marketing at \<consumer/UGC brands\>" →
+  show a short list of real, contactable buyers on a slide.
+- **Why this and not "recruit the creator":** the people in our (sponsor/founder-fronted) demo clips
+  are founders you can't recruit, and the actual video editors aren't in a B2B database. GTM is the
+  only place Fiber genuinely fits.
+- **Rule:** keep it to one slide / one line. It earns sponsor eligibility without muddling the core
+  EEG → virality story. Cut it if the pitch runs long.
+
 ---
 
 ## 4. UI (ASCII mockups)
