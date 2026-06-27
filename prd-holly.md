@@ -12,6 +12,7 @@
 | 4 | **Live waveform rendering** | consume Devan's EEG WebSocket, draw it smoothly |
 | 5 | **Chat / decode API integration** | GPT-realtime in Screen 2 (Devan supplies waveform + semantics) |
 | 6 | **Color profile extraction** | ffmpeg avg-color-per-scene → the color bar |
+| 7 | **Fiber API / GTM closing beat** | one `peopleSearch` call for a slide; you deliver it on stage (see §7) |
 
 **You do NOT own:** picking/serving the 50 videos, precomputing characteristics, the EEG Python
 server, model training. That's Devan. You *consume* his data via the contracts in §3.
@@ -29,6 +30,7 @@ server, model training. That's Devan. You *consume* his data via the contracts i
 | Video data in | **fetch** the Cloudflare API | MP4 + precomputed characteristics + metadata |
 | Chat | **OpenAI GPT-realtime SDK** (sponsor) | You call it from the front-end; system prompt built from video data + waveform |
 | Color extraction | **ffmpeg** + a small Node/Python script | Run offline once per clip, cache the result |
+| GTM beat (bonus) | **Fiber AI** `peopleSearch` (sponsor), `x-api-key` | One call for a closing slide; pull offline. Not in the product. |
 | Deploy | **Vercel** | Demo URL. (Devan's EEG server runs locally on the demo machine.) |
 | Build accelerant | **Claude Code** | Lean on it for uPlot wiring, ffmpeg script, shadcn layout |
 
@@ -185,9 +187,9 @@ Devan gives you the **interpretation rules**; you assemble the prompt + stream t
 - **Screen 1 > Screen 2 > Screen 3** in priority. If time runs out, the chat (Screen 2's LLM
   one-liners) is the first thing to cut — the waveform + video must be flawless.
 - **No typing on stage** — pre-load every input. Decide demo clip order in advance.
-- **You demo the screens** on stage (Yuva narrates, Devan runs the headset/judge interaction).
-  Know your click path cold.
-- **`.gitignore` your OpenAI key** (`.env.local`) — never commit it.
+- **You demo the screens** on stage (Yuva narrates + judge interaction + sponsor-video beat, Devan
+  walks the product). Know your click path cold. **You also deliver the Fiber closing beat (§7).**
+- **`.gitignore` your keys** (`.env.local`: OpenAI **and** Fiber) — never commit them.
 
 ## 6. Open questions for Devan
 
@@ -195,4 +197,24 @@ Devan gives you the **interpretation rules**; you assemble the prompt + stream t
 - [ ] Can he give me a **recorded EEG `.jsonl`** + a `videos.json` mock today?
 - [x] ~~`color_profile`~~ — DECIDED: client-side, keyed by `video_id` (Devan's payload omits it).
 - [ ] Decode semantics for the chat system prompt — what does a theta/beta spike "mean"?
+
+## 7. Fiber API / GTM closing beat (yours — bonus)
+
+A ~15s closing beat you deliver: *"who do we sell this to? We used Fiber to pull the Heads of Growth
+at UGC brands — that's our outbound list."* **Not a product feature** — one call, pulled offline,
+shown on a slide. (Why not "recruit the creator": clips are founder-fronted, editors aren't in a
+B2B DB. GTM is the only honest fit — see PRD §3.)
+
+- **Endpoint:** `peopleSearch` (or `textToProfileSearch`) on `api.fiber.ai`; auth via `x-api-key` header.
+- **Do it offline**, save the result to a JSON, render it on the slide. No live call needed on stage.
+- **On stage:** flash the actual call for ~2s as proof you really used the sponsor.
+- **Key:** `FIBER_API_KEY` in `.env.local` — never commit.
+- **Cut first if the pitch runs long.**
+
+```bash
+# one-off, offline — confirm exact field names at api.fiber.ai/ai-docs/peopleSearch.md
+curl -X POST https://api.fiber.ai/v1/peopleSearch \
+  -H "x-api-key: $FIBER_API_KEY" -H "Content-Type: application/json" \
+  -d '{"query":"Head of Growth at UGC / consumer marketing brands","limit":5}'
+```
 - [ ] Demo-day data: live capture vs pre-recorded? (affects whether I wire the live WS or replay)
