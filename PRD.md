@@ -1,175 +1,221 @@
 # PRD — NeuroViral (working title)
 
-> *"Meta TRIBE for virality."* Read people's brains while they watch short-form
-> content, then predict what makes a video go viral for a given audience.
+> **Stop spraying and praying.** Wear an EEG, watch short-form videos, and let your own
+> brain tell you which ones will go viral — *before* you spend a dollar on ads.
 
-**Team:**
-- **Holly** — operator + full-stack build → prediction-layer UI (Screen 2), content selection
-- **Devan** — full-stack → platform + live brainwave viz (Screen 1)
-- **Yuva** — pitch & narrative, demo choreography
-- **Hardware / data owner** — *TBD* (EEG capture + S3); ask Shree re: firmware/tracking UI
+**Event:** YC Growth Hackathon · demo in ~2 days · niche = **Tech UGC** (commercial tech, talking-head style)
 
-**Event:** YC Hackathon — ~3 days out. Two tracks targeted: *Reading Minds* + *Algorithm Hacking*.
+**Team (3):**
+
+| Person | Role | Owns |
+| --- | --- | --- |
+| **Holly** (you) | recorder / front-end | **The 3 demo screens** (UI) |
+| **Devan** | model + backend | Model training, EEG Python server, Cloudflare + chat APIs |
+| **Yuva** | pitch / founder + neuro | The narrative & on-stage story; **defined the EEG signal (theta/beta)** |
+
+> ⚠️ **Two things still TBD — see §10. I assumed the safe default; flip with one word.**
+> 1. EEG on demo day: **synthetic/pre-recorded** (primary) with real-time as a bonus.
+> 2. Model: **lightweight real signal (theta/beta) + simulated video→waveform** prediction.
 
 ---
 
 ## 1. Problem
 
-Creators and advertisers guess at what makes content go viral. Engagement metrics
-(views, likes) are *lagging* — you only learn after you ship. There's no way to know,
-*before* publishing, which hook / pacing / element actually fires interest in a target
-viewer's brain.
+UGC marketers run "trial and error in production": hire 10 creators, post for a month, then
+put ad spend behind whatever happened to perform. Engagement metrics (likes, views) are
+**lagging** — you only learn after you ship. That's slow and burns money (high CPM → high CAC).
 
 ## 2. Concept
 
-Meta's **TRIBE** model used fMRI on ~700 people to map content → brain response.
-We do the same thing with **EEG hardware** instead of fMRI:
+Like Meta's **TRIBE** (fMRI → content response), but with cheap **EEG**:
 
-- Show curated short-form content to people wearing the headset.
-- Capture **P300 / interest spikes** in real time — see exactly where interest *spikes*
-  and where it *drops off*, second by second, against the video timeline.
-- Train a **prediction layer** on (content features × neural response × consumer profile).
-- Output a **"director's cut to go viral"**: given a target audience, tell the creator what
-  hook / pacing / elements to use at each beat (intro → hook → retention → CTA → conclusion).
+- Show curated Tech-UGC clips to people wearing a headset.
+- Capture an **interest signal** from the brain second-by-second against the video timeline.
+- An LLM **decodes** the waveform into plain language + a **virality score**, explaining *why*
+  a clip engaged the viewer (which hook / pacing / element fired interest).
+- Bottom line: **reduce the number of darts you throw** to hit virality → CPM ↓ → CAC ↓.
 
-## 3. The Demo (this is what we are graded on)
+**The neuro signal:** **theta/beta band-power ratio** (forehead electrodes). We explicitly
+**drop frontal alpha asymmetry** — alpha lives at the back of the head and won't read cleanly
+on a consumer forehead-electrode EEG. Theta + beta are present frontally and visibly move →
+better for a demo.
 
-The demo is two screens running side by side. **The demo > the product** — judges reward a
-clean, visceral live moment.
+## 3. The Demo (this is what we're graded on)
 
-**Screen 1 — Live capture (Devan)**
-A teammate wears the headset and scrolls a stripped-down content feed. The audience watches
-the **brainwave spike in real time** as content plays — visible P300 spikes on a hook, flat
-line on a boring beat. Real-time latency ~5ms + small time buffer for smoothness.
+**Demo > product.** No typing on stage — everything is pre-loaded ("wrapper"). One teammate
+**wears the headset the whole time** as a visual hook. Three screens:
 
-**Screen 2 — Prediction layer (Holly)**
-A creator types a target ("make a video for 18–24, app-review content"). The model returns a
-**director's cut**: each beat annotated with what element to use, backed by "we looked at N
-brain-spike sessions across this content type."
+1. **Live scroll** — video reel + big waveform with annotated interest spikes (apparent real-time).
+2. **Session log** — per-video analysis cards (the 5-field schema + metadata) in a streaming chat-style feed.
+3. **Session report** (separate) — summary stats: which clips/creators/formats won, and why.
 
-**Narrative beat:** *content in → brain reacts → we learned the pattern → here's your viral blueprint.*
+**Pitch arc (Yuva):** bored B2B founders doom-scrolling → all of us like Tech content → wear EEG
+to see *why* → feature walkthrough → **judge interaction** (Aaron/Sarah wear it, compare taste)
+→ more data = more accuracy → *"stop spraying and praying, use science."*
 
-## 4. User Flows
+---
 
-### 4.1 Data-collection app (already built, trim for demo)
-1. Participant puts on headset, opens feed.
-2. Watches curated clips; can upvote / downvote / save. (Eye-tracking optional.)
-3. Every few clips → a quick feedback question.
-4. ~20–30 min session, then close. Data → admin dashboard.
+## 4. UI (ASCII mockups)
 
-### 4.2 Prediction layer (new — Holly's build)
-1. Creator enters a prompt: target persona + age range + content type.
-2. System returns a **viral blueprint**: intro / hook / retention / CTA / conclusion, each beat
-   tagged with the element to use and *why* (which neural pattern it maps to).
-3. (Optional) Show a "evidence" snapshot: N sessions, brain spikes by content type.
+### Screen 1 — Live scroll  *(Holly)*
+```
+┌──────────────────────────────────────────────────────────┐
+│  NeuroViral        ● REC   theta/beta 2.3      Holly 🧠   │
+├───────────────────────────┬──────────────────────────────┤
+│                           │  NOW PLAYING                  │
+│       ┌────────────┐      │  "3 AI apps that..."          │
+│       │            │      │  @techbro · 0:12 / 0:18       │
+│       │   VIDEO    │      │                               │
+│       │ (vertical  │      │  ┌─ characteristics ───────┐  │
+│       │   reel)    │      │  │ color ▮▮▮▮▮▮▮▯▯▯         │  │
+│       │            │      │  │ cuts  7                  │  │
+│       │            │      │  │ audio music + VO         │  │
+│       └────────────┘      │  │ subs  yes                │  │
+│                           │  │ text  "you NEED this"    │  │
+│                           │  └──────────────────────────┘ │
+├───────────────────────────┴──────────────────────────────┤
+│  INTEREST  (theta/beta · live)                            │
+│        ╭╮      ╭─╮            ╭╮                           │
+│   ─────╯╰──────╯ ╰────╮   ╭──╯╰─────   spike = interest   │
+│                       ╰───╯                               │
+│        ▲hook          ▲drop          ▲CTA                 │
+└──────────────────────────────────────────────────────────┘
+```
 
-## 5. Content selection
+### Screen 2 — Session log  *(Holly)*
+```
+┌──────────────────────────────────────────────────────────┐
+│  Session log                               streaming ●    │
+├──────────────────────────────────────────────────────────┤
+│  ┌─ video 1 ─────────────────────────────────────────┐   │
+│  │ [▣] "3 AI apps..."   @techbro                      │   │
+│  │ interest 0.81  ▮▮▮▮▮▮▮▮▯▯                          │   │
+│  │ ↳ Strong spike at the hook (0:02). Fast cuts +     │   │
+│  │   bold on-screen text sustained theta/beta.        │   │
+│  └────────────────────────────────────────────────────┘  │
+│  ┌─ video 2 ─────────────────────────────────────────┐   │
+│  │ [▣] "my honest review"   @sara                     │   │
+│  │ interest 0.34  ▮▮▮▯▯▯▯▯▯▯                          │   │
+│  │ ↳ Flat. Slow intro, no hook in first 3s.           │   │
+│  └────────────────────────────────────────────────────┘  │
+│  ...                                                       │
+│  ┌─ ask ───────────────────────────────────────┐  [ ↑ ]  │
+│  │ why did video 1 win?                          │         │
+│  └───────────────────────────────────────────────┘         │
+└──────────────────────────────────────────────────────────┘
+```
 
-Niche down to keep the sample useful (don't show random everything). Standardize on:
-- **Talking-head app-review** ("3 apps that changed my life" format) — lots of reference content,
-  clean format, works for the headline *"We found the best ad format for consumer apps."*
-- **AI "Fruit / Strawberry Love Island"** clips — highly hooky, easy to read strong responses.
+### Screen 3 — Session report  *(Holly)*
+```
+┌──────────────────────────────────────────────────────────┐
+│  SESSION REPORT   ·  3 viewers · 50 clips · Tech UGC       │
+├──────────────────────────────────────────────────────────┤
+│  TOP PERFORMERS (by interest)                             │
+│   1. "3 AI apps..."   @techbro   ▮▮▮▮▮▮▮▮▯  0.81          │
+│   2. "I tried..."     @devtok    ▮▮▮▮▮▮▮▯▯  0.74          │
+│   3. "honest review"  @nora      ▮▮▮▮▮▮▯▯▯  0.68          │
+│                                                           │
+│  WHAT WINS                 WHO WINS                        │
+│   ▸ hook in first 2s        ▸ @techbro (avg 0.77)         │
+│   ▸ 6–9 cuts                ▸ best format: fast talking-   │
+│   ▸ bold on-screen text       head + captions             │
+│   ▸ warm color palette                                    │
+│                                                           │
+│   →  Stop spraying and praying.   CPM ↓   CAC ↓           │
+└──────────────────────────────────────────────────────────┘
+```
 
-## 6. Data schema — the interface contract
+---
 
-**This is the single integration point between Devan's capture and Holly's model.** Lock it
-first, then both sides build fully in parallel.
+## 5. Data scope
+
+- **~50+ videos**, **one niche** = commercial Tech UGC, talking-head style (~20 min of content).
+- Likes/shares **hidden** during capture so brain response isn't biased by social proof.
+- Stored on **Cloudflare**, served to the front-end via API as MP4 + precomputed characteristics.
+
+## 6. Schema — the interface contract  *(lock this first; Holly ↔ Devan integrate here)*
 
 ```jsonc
-// One neural-response sample, aligned to the content timeline
+// Per-video payload (Cloudflare API → front-end). Characteristics are PRECOMPUTED.
 {
-  "session_id": "uuid",
-  "participant_id": "uuid",
-  "content_id": "uuid",          // which clip
-  "content_t_ms": 4200,          // ms offset into the clip (alignment key)
-  "wall_clock_ms": 1719200000000,
-  "eeg": {
-    "p300_amplitude": 7.4,       // µV, primary interest signal
-    "channels": { "Fz": 3.1, "Cz": 5.2, "Pz": 7.4 },  // raw per-channel µV
-    "interest_score": 0.81       // 0–1 derived, for the live viz
+  "video_id": "uuid",
+  "url": "https://.../clip.mp4",
+  "characteristics": {              // the 5 fields shown on Screen 1/2
+    "audio": "music + VO",          // one word/short: music | VO | music+VO
+    "transcript_summary": "...",    // 1–3 lines (pre-analysis step)
+    "color_profile": ["#e8c9a0", "#c97b4a", ...],  // avg color per scene → a bar
+    "cut_count": 7,                 // number of scenes/cuts
+    "on_screen_text": "you NEED this"
   },
-  "event": "upvote | downvote | save | feedback | null",
-  "feedback": { "question_id": "uuid", "answer": "..." }  // when event=feedback
+  "metadata": {
+    "duration_ms": 18000,
+    "created_at": "2026-06-01",
+    "creator": "@techbro",
+    "likes": 124000, "shares": 8200
+  }
 }
 
-// Content metadata (features the model learns against)
+// EEG sample (local Python server → front-end over WebSocket), aligned to the clip timeline
 {
-  "content_id": "uuid",
-  "type": "app_review | ai_love_island",
-  "duration_ms": 18000,
-  "beats": [ { "t_ms": 0, "label": "intro" }, { "t_ms": 1500, "label": "hook" }, ... ]
+  "session_id": "uuid",
+  "video_id": "uuid",
+  "video_t_ms": 4200,               // ms offset into the clip (alignment key)
+  "theta_beta": 2.3,                // primary band-power ratio
+  "interest_score": 0.81            // 0–1 derived, for the waveform + cards
 }
 ```
 
 ## 7. Tech stack
 
-Two processes, one contract (the §6 schema). **UI in TS, hardware + model in Python**, wired
-over WebSocket (live waveform) + S3/HTTP (data). Every choice maps to an owner in §8.
-
 | Layer | Choice | Owner | Why |
 | --- | --- | --- | --- |
-| **Both screens (UI)** | Next.js (App Router) + TypeScript + Tailwind + shadcn/ui | Holly + Devan | Fast to build, both already full-stack in JS |
-| **Live EEG chart (Screen 1)** | uPlot (or raw canvas) over a **WebSocket** | Devan | Handles high-frequency streams smoothly; ~5ms + buffer |
-| **Prediction UI (Screen 2)** | Same Next.js app, separate route | Holly | One repo, one deploy |
-| **Hardware bridge** | Python service + EEG SDK (BrainFlow / device SDK) | Yuva | EEG SDKs are Python; computes `p300_amplitude` / `interest_score`, emits §6 schema |
-| **Realtime transport** | WebSocket (Python → browser) | Yuva + Devan | Push brainwaves live to Screen 1 |
-| **Raw data store** | **S3** (already in use) | Yuva | Fallback demo data lives here too |
-| **Session/content/feedback DB** | Supabase (Postgres) — or SQLite if offline | Devan | Quick to stand up; dashboards for free |
-| **Model — blueprint generation** | **OpenAI API** (GPT-5 / latest available), neural-pattern summary as context | Holly | LLM turns "this audience + these spikes" → director's cut. **OpenAI = sponsor** → eligible for sponsor prize + API credits |
-| **Model — interest classifier (optional)** | scikit-learn / LightGBM on (content features × neural response) | Holly | Lightweight; fine-tune story for the pitch |
-| **Deploy** | Vercel (UI) + a small box/Render for the Python service | Devan | Demo-ready URLs |
-| **Build accelerant** | Claude Code | all | Transcript plan — lean on it for the unfamiliar ML parts |
+| **3 screens (UI)** | Next.js (App Router) + TS + Tailwind + shadcn/ui | **Holly** | Fast, looks great on stage; 3 routes |
+| **Live waveform** | uPlot or raw `<canvas>` over **WebSocket** | Holly (Devan feeds it) | Smooth high-frequency stream |
+| **EEG bridge** | Python + OpenBCI / BrainFlow SDK → **WebSocket** | **Devan** | EEG SDKs are Python; computes theta/beta + interest_score |
+| **Video + characteristics API** | **Cloudflare** (Workers/R2) serving MP4 + §6 schema | **Devan** | One API, precomputed offline |
+| **Chat / decode API** | **GPT-realtime (OpenAI — sponsor)**; system prompt = video data + waveform | **Devan** | Decodes "this audience + these spikes" → plain language. Sponsor prize + credits |
+| **Model: video → waveform** | Fine-tune on requested dataset **if it arrives**, else simulate | **Devan** | Demo-grade; see §10 |
+| **Color profile extraction** | ffmpeg + simple avg-color-per-scene script | Devan (Holly renders) | Cheap, visually striking |
+| **Deploy** | Vercel (UI) + small box/Render (Python EEG server runs local on demo machine) | Devan | Demo URLs; EEG must be local to the headset |
+| **Build accelerant** | Claude Code | all | Lean on it for ML / unfamiliar parts |
 
-**The one real decision:** keep hardware + model in **Python** (SDKs + fine-tuning live there)
-and the two screens in **Next.js/TS** — two processes talking over WS/HTTP. Don't try to do EEG
-or fine-tuning in JS.
+**One real decision:** UI in **Next.js/TS**, EEG + model in **Python**, talking over **WebSocket**
+(live waveform) + **HTTP** (video/chat). Don't do EEG or fine-tuning in JS.
 
-## 8. Scope — build vs cut (1-day reality)
+## 8. Scope — build vs cut (2-day reality)
 
-| Build (must-have for demo) | Cut / fake for now |
+| Build (must-have) | Cut / fake for now |
 | --- | --- |
-| Trimmed feed: 1st page + up/down/save | Full product flow, auth, real eye-tracking |
-| Live brainwave viz synced to playing clip | Generating new videos on the fly (too slow) |
-| Prediction-layer prompt → blueprint output | Large-scale survey collection |
-| Data schema + S3 store + admin view | Per-user personalization model |
-| Fallback: pre-recorded S3 data for the demo | Training from scratch (we **fine-tune**) |
+| 3 screens, no-typing wrapper flow | Auth, full product, eye-tracking, pupillometry |
+| Waveform synced to playing clip | Generating new videos on the fly |
+| 50 clips on Cloudflare + precomputed schema | Large-scale survey / 100-person study |
+| Session log + report screens | Per-user personalization model |
+| Pre-recorded EEG fallback ready | Training from scratch (we fine-tune or simulate) |
 
-**Model:** fine-tune an existing dataset alongside fresh neural data (training ~10–24 hrs).
-Collect fresh scrolling data **before** the event; if time runs out, demo on S3 data.
+## 9. Timeline
 
-## 9. Work division
+- **Today:** lock this PRD + §6 schema. Devan picks **50+** Tech-UGC clips → Cloudflare +
+  precompute characteristics. Holly scaffolds the 3 screens. Devan stands up EEG WebSocket.
+  Devan chases dataset-access email.
+- **Tomorrow (hackathon @ 4pm):** the 3 of us record our **own** EEG while scrolling → feed the
+  model → finalize UI ↔ backend integration → **rehearse pitch to 2–3 min**.
+- **On stage:** Holly demos the screens she built; Yuva drives the narrative; Devan handles
+  judge interaction (Aaron/Sarah wear the headset) + keeps the stream alive.
 
-| Owner | Owns | Deliverable |
-| --- | --- | --- |
-| **Holly** (operator) | **Prediction-layer UI (Screen 2)**, content selection | The blueprint screen + curated content |
-| **Devan** | Trimmed platform, **live brainwave viz (Screen 1)**, capture integration | The live-capture front |
-| **Yuva** | **Pitch & narrative**, demo choreography, on-stage storytelling | The winning story |
-| **Hardware owner (TBD)** | Headset, real-time data streams, derisking | Reliable EEG stream (must not break) |
+## 10. Open questions (need your call)
 
-**Why this split:** only one integration point (the schema in §6). Holly + Devan each own one
-vertical (one screen each) so they don't overlap; Yuva drives the pitch; hardware is its own
-job because "don't break on stage" is the top risk (§11).
+- [ ] **EEG on demo day:** synthetic/pre-recorded (assumed) vs must be real-time live capture?
+- [ ] **Model:** simulated video→waveform (assumed) vs actually fine-tune on the dataset?
+- [ ] **Dataset access** — did the gated EEG dataset email come back? (Devan)
+- [ ] Will judges (Aaron/Sarah) actually wear the headset, and may we use their names on stage?
+- [ ] Final 50-clip list locked? (Devan) — confirm single sub-niche within Tech UGC.
 
-## 10. Timeline (3 days)
-
-- **T-3 (today):** lock this PRD + data schema. Holly drafts pitch. Yuva confirms hardware.
-- **T-2 (tomorrow, 12:00–5:00 @ house):** collect scrolling neural data on ourselves
-  (no prior scrolling studies exist). Start fine-tuning. Both screens scaffolded.
-- **T-1:** integrate Screen 1 ↔ Screen 2 over the schema. Fine-tune finishes. Curate content.
-- **Hackathon day:** rehearse demo ≥3×, derisk hardware, finalize pitch.
-
-## 11. Risks & derisking
+## 11. Risks
 
 | Risk | Mitigation |
 | --- | --- |
-| **Hardware breaks live** (top risk) | Rehearse on-device ≥3×; pre-recorded S3 fallback ready |
-| No scrolling data yet | Collect on ourselves T-2 (12–5 session) |
-| Real-time jitter | ~5ms latency + time buffer to smooth the viz |
-| Two devs overlap | Vertical split + single schema contract (§6, §9) |
-| Neither dev has fine-tuned before | Fine-tune (not train); pair on it; lean on Claude Code |
-
-## 12. Open questions
-
-- [ ] Confirm hackathon eligibility / apply (Holly to DM organizers).
-- [ ] Where does the brainwave/firmware tracking UI live? (Devan → ask Shree.)
-- [ ] Which exact clips for the curated set? (Holly to finalize content list.)
+| **Headset breaks/jitters live** (top risk) | Pre-recorded EEG fallback; one person wears it the whole time; rehearse ≥3× |
+| Dataset doesn't arrive | Simulate video→waveform; train light theta/beta only on our 3 recordings |
+| Holly ↔ Devan overlap | Single §6 schema contract; Holly owns all UI, Devan owns all data/model |
+| Waveform looks weak on screen | Auto-scale display; use theta/beta (not alpha) so spikes are visible |
+| Pitch runs long | Hard-cap 2–3 min; Yuva rehearses; cut the chat feature if needed |
