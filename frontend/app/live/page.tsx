@@ -1,11 +1,12 @@
 "use client";
 // Screen 1 — Live scroll (the money shot). See prd-holly.md §2.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getVideos } from "@/lib/api";
 import { subscribeEeg } from "@/lib/ws";
 import type { Video, EegSample } from "@/lib/types";
 import Waveform from "@/components/Waveform";
 import CharacteristicsPanel from "@/components/CharacteristicsPanel";
+import InsightTabs from "@/components/InsightTabs";
 
 function fmt(ms: number) {
   const s = Math.floor(ms / 1000);
@@ -14,8 +15,9 @@ function fmt(ms: number) {
 
 export default function LivePage() {
   const [videos, setVideos] = useState<Video[]>([]);
-  const [current, setCurrent] = useState(0);
+  const [current] = useState(0);
   const [samples, setSamples] = useState<EegSample[]>([]);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     getVideos().then(setVideos);
@@ -45,15 +47,16 @@ export default function LivePage() {
         <span className="ml-auto text-sm text-neutral-400">Holly 🧠</span>
       </div>
 
-      {/* video + characteristics — 50/50 split (video left, info right) */}
-      <div className="grid grid-cols-2 items-start gap-8">
+      {/* video + characteristics — 50/50 split with a center divider */}
+      <div className="grid grid-cols-[1fr_1px_1fr] items-stretch gap-8">
         {/* video stage — fixed height, fits a 9:16 reel OR a 16:9 clip via object-contain */}
         <div className="flex h-[440px] items-center justify-center">
           {isReal ? (
             <video
+              ref={videoRef}
               src={video!.url}
               className="h-full w-auto max-w-[560px] rounded-2xl border border-neutral-800 bg-black object-contain"
-              autoPlay muted loop playsInline
+              playsInline controls
             />
           ) : (
             <div className="relative flex h-full w-auto items-end overflow-hidden rounded-2xl border border-neutral-800 bg-gradient-to-b from-neutral-800 to-neutral-950"
@@ -66,6 +69,9 @@ export default function LivePage() {
           )}
         </div>
 
+        {/* center divider */}
+        <div className="bg-neutral-800/80" />
+
         {/* info column — fills its 50% half */}
         <div className="w-full space-y-3">
           <div>
@@ -76,16 +82,7 @@ export default function LivePage() {
             </div>
           </div>
           {video && <CharacteristicsPanel video={video} />}
-          <div className="flex gap-2 pt-1">
-            <button
-              onClick={() => { setCurrent((c) => (c - 1 + videos.length) % videos.length); setSamples([]); }}
-              className="rounded-lg border border-neutral-700 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-800"
-            >← prev clip</button>
-            <button
-              onClick={() => { setCurrent((c) => (c + 1) % videos.length); setSamples([]); }}
-              className="rounded-lg border border-neutral-700 px-3 py-1.5 text-sm text-neutral-300 hover:bg-neutral-800"
-            >next clip →</button>
-          </div>
+          <InsightTabs />
         </div>
       </div>
 

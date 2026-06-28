@@ -1,7 +1,7 @@
 [
   {
     "video_id": "11111111-1111-1111-1111-111111111111",
-    "url": "https://example.com/clips/3-ai-apps.mp4",
+    "url": "/clips/video.mp4",
     "characteristics": {
       "audio": "music+VO",
       "transcript_summary": "3 AI apps that changed my life — fast talking-head listing tools with bold claims.",
