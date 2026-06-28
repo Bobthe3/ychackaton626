@@ -21,26 +21,22 @@ function clock(ms: number) {
 }
 
 export default function Waveform({ samples }: { samples: EegSample[] }) {
-  if (samples.length < 2) {
-    return (
-      <div className="flex h-[200px] items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900/60 text-sm text-neutral-600">
-        waiting for signal…
-      </div>
-    );
-  }
+  // Before the clip plays there's no signal yet — we still render the full grid
+  // + axes (just no line) so the feature reads as "live monitor, armed".
+  const hasData = samples.length >= 2;
 
   const real = samples.map((s) => s.interest_score);
   const hasPredict = samples.some((s) => typeof s.predict_score === "number");
   // predict falls back to real where absent so the line stays continuous
   const predict = samples.map((s) => (typeof s.predict_score === "number" ? s.predict_score : s.interest_score));
 
-  // auto-scale across both layers
+  // auto-scale across both layers; default to 0..1 before any data
   const all = hasPredict ? real.concat(predict) : real;
-  const min = Math.min(...all);
-  const max = Math.max(...all);
+  const min = hasData ? Math.min(...all) : 0;
+  const max = hasData ? Math.max(...all) : 1;
   const range = max - min || 1;
 
-  const X = (i: number) => LEFT + (i / (samples.length - 1)) * (W - LEFT - RIGHT);
+  const X = (i: number) => LEFT + (i / Math.max(1, samples.length - 1)) * (W - LEFT - RIGHT);
   const Y = (v: number) => H - BOTTOM - ((v - min) / range) * (H - BOTTOM - TOP);
 
   const pts = (vals: number[]) => vals.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
@@ -48,14 +44,17 @@ export default function Waveform({ samples }: { samples: EegSample[] }) {
   const predictLine = pts(predict);
   const area = `${LEFT},${H - BOTTOM} ${realLine} ${(W - RIGHT)},${H - BOTTOM}`;
 
-  // background grid — horizontal ratio ticks (y) + vertical time ticks (x)
+  // background grid — horizontal ratio ticks (y) + vertical time ticks (x).
+  // Empty state falls back to 0.00–1.00 on y and 0:00–0:30 on x.
   const yTicks = Array.from({ length: NY + 1 }, (_, k) => {
     const v = min + (k / NY) * range;
     return { v, y: Y(v) };
   });
   const xTicks = Array.from({ length: NX + 1 }, (_, k) => {
-    const i = Math.round((k / NX) * (samples.length - 1));
-    return { x: X(i), t: samples[i].video_t_ms };
+    const frac = k / NX;
+    const x = LEFT + frac * (W - LEFT - RIGHT);
+    const t = hasData ? samples[Math.round(frac * (samples.length - 1))].video_t_ms : frac * 30000;
+    return { x, t };
   });
 
   // top spikes on the REAL signal = local maxima in the upper band
