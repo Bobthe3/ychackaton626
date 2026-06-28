@@ -1,6 +1,50 @@
 import type { EegSample } from "./types";
+import type { PredictedCurve } from "./predict";
+import { sampleCurve } from "./predict";
 
 type Handler = (s: EegSample) => void;
+
+/** Drive the waveform from the M2 model's PREDICTED curve for the playing clip.
+ *  - predict_score = the model's content->EEG prediction, sampled at the live
+ *    playback time (so the dashed "predict" layer IS the model output).
+ *  - interest_score = the "measured" signal: the prediction plus a mean-reverting
+ *    walk + jitter, so the bright "real" line hugs the prediction the way a
+ *    viewer's attention tracks it — until live EEG (NEXT_PUBLIC_EEG_WS_URL) is wired.
+ *  x-axis = real playback time (ms). Returns an unsubscribe fn. */
+export function subscribePredictedEeg(
+  curve: PredictedCurve,
+  getTimeMs: () => number,
+  onSample: Handler,
+): () => void {
+  let cancelled = false;
+  const STEP = 250; // ms (~4 Hz)
+  const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+  let walk = 0;
+
+  const tick = () => {
+    if (cancelled) return;
+    const tMs = getTimeMs();
+    const predict = sampleCurve(curve, tMs / 1000);
+    walk = walk * 0.94 + (Math.random() - 0.5) * 0.08;
+    const jitter = (Math.random() - 0.5) * 0.04;
+    const interest = clamp(predict + walk + jitter, 0.02, 1);
+    const theta_beta = clamp(1.2 + interest * 2.2 + (Math.random() - 0.5) * 0.25, 0.5, 4);
+    onSample({
+      session_id: "model",
+      video_id: "model",
+      video_t_ms: tMs,
+      theta_beta: Number(theta_beta.toFixed(2)),
+      interest_score: Number(interest.toFixed(3)),
+      predict_score: Number(predict.toFixed(3)),
+    });
+    setTimeout(tick, STEP);
+  };
+  tick();
+
+  return () => {
+    cancelled = true;
+  };
+}
 
 /** Subscribe to Devan's EEG WebSocket. Returns an unsubscribe fn.
  *  If no WS url is set, falls back to replaying the shared mock .jsonl. */
