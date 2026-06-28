@@ -57,43 +57,51 @@ export default function Waveform({ samples }: { samples: EegSample[] }) {
     <svg viewBox={`0 0 ${W} ${H}`} className="h-[200px] w-full rounded-xl border border-neutral-800 bg-neutral-900/60">
       <defs>
         <linearGradient id="wf" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
+          <stop offset="0%" stopColor="#9fe9ff" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#9fe9ff" stopOpacity="0" />
         </linearGradient>
+        {/* fluorescent glow for the real line */}
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2.4" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
 
       <polygon points={area} fill="url(#wf)" />
 
-      {/* predict layer — faint dashed, sits under the real line */}
+      {/* predict layer — deeper saturated blue, dashed: clearly the lower/background layer */}
       {hasPredict && (
         <polyline
           points={predictLine}
           fill="none"
-          stroke="#38bdf8"
-          strokeWidth="1.75"
-          strokeDasharray="5 5"
+          stroke="#2f8fd6"
+          strokeWidth="1.5"
+          strokeDasharray="3 6"
           strokeLinejoin="round"
-          opacity="0.45"
+          opacity="0.85"
         />
       )}
 
-      {/* real layer — bright solid */}
-      <polyline points={realLine} fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeLinejoin="round" />
+      {/* real layer — fluorescent cool white-blue, glowing, on top */}
+      <polyline points={realLine} fill="none" stroke="#d6f7ff" strokeWidth="2.75" strokeLinejoin="round" filter="url(#glow)" />
 
       {/* legend */}
       {hasPredict && (
         <g fontSize="11" transform={`translate(${W - 150}, 16)`}>
-          <line x1="0" y1="0" x2="16" y2="0" stroke="#38bdf8" strokeWidth="1.75" strokeDasharray="5 5" opacity="0.55" />
-          <text x="20" y="4" fill="#38bdf8" opacity="0.7">predict</text>
-          <line x1="74" y1="0" x2="90" y2="0" stroke="#38bdf8" strokeWidth="2.5" />
-          <text x="94" y="4" fill="#7dd3fc">real</text>
+          <line x1="0" y1="0" x2="16" y2="0" stroke="#2f8fd6" strokeWidth="1.5" strokeDasharray="3 6" opacity="0.85" />
+          <text x="20" y="4" fill="#6fb6e6">predict</text>
+          <line x1="74" y1="0" x2="90" y2="0" stroke="#d6f7ff" strokeWidth="2.75" />
+          <text x="94" y="4" fill="#d6f7ff">real</text>
         </g>
       )}
 
       {top.map((p, i) => (
         <g key={i}>
-          <circle cx={p.x} cy={p.y} r="4" fill="#38bdf8" />
-          <text x={p.x} y={p.y - 10} fill="#7dd3fc" fontSize="12" textAnchor="middle">▲{p.tag}</text>
+          <circle cx={p.x} cy={p.y} r="4" fill="#d6f7ff" filter="url(#glow)" />
+          <text x={p.x} y={p.y - 10} fill="#d6f7ff" fontSize="12" textAnchor="middle">▲{p.tag}</text>
         </g>
       ))}
 

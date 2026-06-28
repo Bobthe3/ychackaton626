@@ -66,8 +66,9 @@ function replayMock(onSample: Handler): () => void {
       }
       predict = clamp(predict, 0.05, 0.97);
 
-      // real measured signal: hugs predict, drifts via random walk, jitters
-      walk = walk * 0.9 + (Math.random() - 0.5) * 0.07;
+      // real measured signal: tracks predict but drifts away via a slower,
+      // larger random walk (so the two layers visibly separate) plus jitter
+      walk = walk * 0.94 + (Math.random() - 0.5) * 0.12;
       const jitter = (Math.random() - 0.5) * 0.05;
       const interest = clamp(predict + walk + jitter, 0.02, 1);
       const theta_beta = clamp(1.2 + interest * 2.2 + (Math.random() - 0.5) * 0.25, 0.5, 4);
