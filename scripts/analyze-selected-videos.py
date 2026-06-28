@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-"""Extract local video features for the selected Instagram videos.
+"""Extract local video features for the selected Instagram videos (v1 / legacy).
 
 Outputs:
   - one JSON file per analyzed video
   - analysis-summary.csv with one row per video
   - palette PNGs, one vertical color stripe per sampled frame
+
+**Scene / pacing cuts:** this script emits `scenes` + normalized `scene_cuts` for the
+legacy summary CSV. The model pipeline (schema v2 per-window curves, hook block,
+aggregate pacing) lives in ``model/extract_features.py`` — use that for training
+features. Pass ``--skip-scenes`` here when you only need transcript/OCR/palette.
 
 The script uses ffmpeg/ffprobe plus optional local tools:
   - tesseract CLI for visible overlay text
@@ -67,6 +72,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--whisper-model", default="base")
     parser.add_argument("--skip-ocr", action="store_true")
     parser.add_argument("--skip-visual", action="store_true", help="Skip visual-element detection.")
+    parser.add_argument("--skip-scenes", action="store_true",
+                        help="Skip scene detection (pacing cuts come from model/extract_features.py).")
+    parser.add_argument(
+        "--backfill-scene-cuts",
+        action="store_true",
+        help="Add scene_cuts to existing v1 features.json files from their scenes block (no re-analyze).",
+    )
     parser.add_argument("--visual-fps", type=float, default=2.0, help="Frame sample rate for visual elements.")
     parser.add_argument("--visual-max-frames", type=int, default=40)
     parser.add_argument("--visual-width", type=int, default=200, help="Downscale width for visual analysis.")
@@ -230,6 +242,46 @@ def detect_scene_cuts_ffmpeg(path: Path, threshold: float) -> dict[str, Any]:
         "scene_count": len(times) + 1,
         "cut_count": len(times),
         "scene_boundaries": [round(t, 3) for t in times],
+    }
+
+
+def scene_cuts_from_scenes(scenes: dict[str, Any]) -> dict[str, Any]:
+    """Normalized cut list consumed by model/extract_features.py (v1 read path).
+
+    PySceneDetect stores scene *starts* (first entry ~0 s); ffmpeg stores cut instants.
+    """
+    if scenes.get("enabled") is False or scenes.get("reason", "").startswith("skipped"):
+        return {
+            "cut_times": [],
+            "cut_count": 0,
+            "source": "skipped",
+            "note": "Scene detection skipped; use model/extract_features.py for pacing.",
+        }
+    if scenes.get("error"):
+        return {
+            "cut_times": [],
+            "cut_count": 0,
+            "source": scenes.get("engine"),
+            "error": scenes["error"],
+        }
+    boundaries = scenes.get("scene_boundaries") or []
+    engine = str(scenes.get("engine") or "")
+    if not boundaries:
+        cut_count = scenes.get("cut_count")
+        return {
+            "cut_times": [],
+            "cut_count": int(cut_count) if cut_count is not None else 0,
+            "source": engine or None,
+        }
+    if "pyscenedetect" in engine and safe_float(boundaries[0]) <= 0.05:
+        cut_times = [round(float(t), 3) for t in boundaries[1:]]
+    else:
+        cut_times = [round(float(t), 3) for t in boundaries]
+    cut_times.sort()
+    return {
+        "cut_times": cut_times,
+        "cut_count": len(cut_times),
+        "source": engine or None,
     }
 
 
@@ -403,6 +455,28 @@ def maybe_transcribe(path: Path, out_dir: Path, model: str) -> dict[str, Any]:
     }
 
 
+def load_existing_transcript(out_dir: Path, stem: str) -> dict[str, Any] | None:
+    """Reuse a transcript from an earlier --transcribe run, if one is on disk.
+
+    Lets runs that only re-extract other features (e.g. scene-detector tuning)
+    keep the transcript instead of resetting it to "not_requested".
+    """
+    json_path = out_dir / f"{stem}.json"
+    if not json_path.exists():
+        return None
+    try:
+        data = json.loads(json_path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    return {
+        "enabled": True,
+        "cached": True,
+        "text": (data.get("text") or "").strip(),
+        "segments": data.get("segments", []),
+        "json": str(json_path),
+    }
+
+
 # --- Visual-element detection (local heuristics, no OpenCV) ----------------------
 #
 # Three detectors share one low-res RGB frame stack pulled with ffmpeg:
@@ -475,8 +549,26 @@ def _zone(mask: np.ndarray, r0: float, r1: float, c0: float, c1: float) -> np.nd
     return mask[int(r0 * h):int(r1 * h), int(c0 * w):int(c1 * w)]
 
 
-def detect_logo_watermark(gray: np.ndarray) -> dict[str, Any]:
-    """Find persistent overlays: regions static across time while the scene moves."""
+# Map a static-region zone to the kind of overlay it most likely is. Corners read as
+# brand logos / @handles; the centered top/bottom bands read as pinned title/hook or
+# caption cards (verified on real reels: a sharp title card up top, mush behind it).
+OVERLAY_ZONES = {
+    "top-left": ((0.0, 0.28, 0.0, 0.34), "logo_or_handle"),
+    "top-right": ((0.0, 0.28, 0.66, 1.0), "logo_or_handle"),
+    "bottom-left": ((0.72, 1.0, 0.0, 0.34), "logo_or_handle"),
+    "bottom-right": ((0.72, 1.0, 0.66, 1.0), "logo_or_handle"),
+    "top-center": ((0.0, 0.16, 0.30, 0.70), "title_or_caption_card"),
+    "bottom-center": ((0.84, 1.0, 0.20, 0.80), "title_or_caption_card"),
+}
+
+
+def detect_persistent_overlays(gray: np.ndarray) -> dict[str, Any]:
+    """Find persistent overlays: regions static across time while the scene moves.
+
+    Catches brand logos / @handles and pinned title/caption cards alike — anything
+    fixed on top of moving footage. The per-detection ``kind`` distinguishes a corner
+    mark from a centered title band.
+    """
     temporal_std = gray.std(axis=0)              # (h, w)
     motion_mean = float(temporal_std.mean())
     static_mask = temporal_std < VE_STATIC_THR
@@ -487,31 +579,25 @@ def detect_logo_watermark(gray: np.ndarray) -> dict[str, Any]:
     edge_mask = (gx[: h - 1, : w - 1] + gy[: h - 1, : w - 1]) > VE_EDGE_THR
 
     center_static = float(_zone(static_mask, 0.3, 0.7, 0.3, 0.7).mean())
-    zones = {
-        "top-left": (0.0, 0.28, 0.0, 0.34),
-        "top-right": (0.0, 0.28, 0.66, 1.0),
-        "bottom-left": (0.72, 1.0, 0.0, 0.34),
-        "bottom-right": (0.72, 1.0, 0.66, 1.0),
-        "top-center": (0.0, 0.16, 0.30, 0.70),
-        "bottom-center": (0.84, 1.0, 0.20, 0.80),
-    }
-    # A logo/watermark is a static region sitting ON TOP of genuinely moving video.
-    # If the center is itself mostly static (screen recording, slideshow, locked-off
-    # talking head) then "static corners" are just static content, not an overlay.
+    # A real overlay sits ON TOP of genuinely moving video. If the center is itself
+    # mostly static (screen recording, slideshow, locked-off shot) then "static
+    # corners" are just static content, not an overlay — so require a moving center.
     moving_background = center_static < VE_CENTER_MOVING and motion_mean > VE_DYNAMIC_FLOOR
     detections = []
     if moving_background:
-        for name, (r0, r1, c0, c1) in zones.items():
+        for name, ((r0, r1, c0, c1), kind) in OVERLAY_ZONES.items():
             s = float(_zone(static_mask, r0, r1, c0, c1).mean())
             e = float(_zone(edge_mask, r0, r1, c0, c1).mean())
             if s > 0.55 and e > 0.06:  # static here + has structure (text/mark)
                 conf = round(min(1.0, 0.5 * s + 5.0 * e), 3)
                 detections.append(
-                    {"zone": name, "static_ratio": round(s, 3), "edge_density": round(e, 3), "confidence": conf}
+                    {"zone": name, "kind": kind, "static_ratio": round(s, 3),
+                     "edge_density": round(e, 3), "confidence": conf}
                 )
     detections.sort(key=lambda d: d["confidence"], reverse=True)
     return {
         "present": bool(detections),
+        "kinds": sorted({d["kind"] for d in detections}),
         "zones": [d["zone"] for d in detections],
         "detections": detections,
         "motion_mean": round(motion_mean, 3),
@@ -630,7 +716,7 @@ def detect_visual_elements(
         "method": "local-heuristics",
         "frames_analyzed": int(n),
         "frame_size": [int(w), int(h)],
-        "logo_watermark": detect_logo_watermark(gray),
+        "persistent_overlay": detect_persistent_overlays(gray),
         "screen_recording": detect_screen_recording(stack, gray, ocr_terms),
         "subtitles": overlays["subtitles"],
         "popups": overlays["popups"],
@@ -665,7 +751,11 @@ def analyze_video(args: argparse.Namespace, row: dict[str, str], video_path: Pat
         "height": video_stream.get("height"),
         "codec": video_stream.get("codec_name"),
         "palette": sample_palette(video_path, args.palette_fps, palette_path),
-        "scenes": detect_scenes(video_path, args.scene_detector, args.scene_threshold),
+        "scenes": (
+            {"enabled": False, "reason": "skipped (--skip-scenes); pacing from model/extract_features.py"}
+            if args.skip_scenes
+            else detect_scenes(video_path, args.scene_detector, args.scene_threshold)
+        ),
         "audio": extract_audio_features(video_path),
         "ocr": {"enabled": False, "reason": "skipped"},
         "transcript": {"enabled": False, "reason": "not_requested"},
@@ -679,6 +769,12 @@ def analyze_video(args: argparse.Namespace, row: dict[str, str], video_path: Pat
         )
     if args.transcribe:
         result["transcript"] = maybe_transcribe(video_path, transcript_dir, args.whisper_model)
+    else:
+        cached = load_existing_transcript(transcript_dir, video_path.stem)
+        if cached is not None:
+            result["transcript"] = cached
+
+    result["scene_cuts"] = scene_cuts_from_scenes(result["scenes"])
 
     video_out.mkdir(parents=True, exist_ok=True)
     (video_out / "features.json").write_text(json.dumps(result, indent=2))
@@ -692,7 +788,7 @@ def flatten_summary(item: dict[str, Any]) -> dict[str, Any]:
     scenes = item.get("scenes") or {}
     transcript = item.get("transcript") or {}
     ve = item.get("visual_elements") or {}
-    logo = ve.get("logo_watermark") or {}
+    overlay = ve.get("persistent_overlay") or {}
     screen = ve.get("screen_recording") or {}
     subs = ve.get("subtitles") or {}
     popups = ve.get("popups") or {}
@@ -732,9 +828,10 @@ def flatten_summary(item: dict[str, Any]) -> dict[str, Any]:
         "ocr_text_presence_ratio": ocr.get("text_presence_ratio"),
         "likely_subtitles": ocr.get("likely_subtitles"),
         "ocr_sample_text": " | ".join((ocr.get("sample_text") or [])[:3]),
-        "has_logo_watermark": logo.get("present"),
-        "logo_zones": "|".join(logo.get("zones") or []),
-        "mostly_static": logo.get("mostly_static"),
+        "has_persistent_overlay": overlay.get("present"),
+        "overlay_kinds": "|".join(overlay.get("kinds") or []),
+        "overlay_zones": "|".join(overlay.get("zones") or []),
+        "mostly_static": overlay.get("mostly_static"),
         "screen_recording_likely": screen.get("likely"),
         "screen_recording_score": screen.get("score"),
         "subtitles_present": subs.get("present"),
@@ -758,9 +855,32 @@ def write_summary(path: Path, rows: list[dict[str, Any]]) -> None:
         writer.writerows(rows)
 
 
+def backfill_scene_cuts(out: Path) -> int:
+    updated = 0
+    for feat in sorted((out / "videos").glob("*/features.json")):
+        try:
+            data = json.loads(feat.read_text())
+        except (json.JSONDecodeError, OSError):
+            continue
+        if "scenes" not in data:
+            continue
+        data["scene_cuts"] = scene_cuts_from_scenes(data["scenes"])
+        feat.write_text(json.dumps(data, indent=2))
+        updated += 1
+    print(f"Backfilled scene_cuts on {updated} features.json files under {out / 'videos'}")
+    return updated
+
+
 def main() -> int:
     args = parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
+    if args.backfill_scene_cuts:
+        backfill_scene_cuts(args.out)
+        return 0
+    if args.skip_scenes:
+        print("Note: --skip-scenes — pacing/cut features come from model/extract_features.py")
+    else:
+        print("Note: v1 scene cuts are summary-only; model pacing → model/extract_features.py")
     selected = read_selected(args.selected_csv)
     downloads = index_downloads(args.downloads)
     if args.ids:

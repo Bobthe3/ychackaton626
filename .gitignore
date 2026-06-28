@@ -61,3 +61,8 @@ sponsor-videos/
 # The app keeps only generic, hardware-agnostic sync plumbing (eegSyncId,
 # timestamps, export tables) in shared code. See hardware/README.md.
 hardware/
+
+# model pipeline outputs (scripts committed; built tables gitignored)
+model/datasets/
+model/out/
+model/features/

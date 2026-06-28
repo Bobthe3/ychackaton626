@@ -72,7 +72,8 @@ def make_video_record(row: dict[str, str], order: int, condition: str) -> tuple[
     duration = float(row.get("duration") or 0) or None
     # Keep content_type broad; richer metadata stays in selected-videos.csv and
     # offline feature exports, both keyed by this same video id.
-    content_type = "instagram_reel"
+    platform = (row.get("platform") or "instagram").strip().lower()
+    content_type = "tiktok_video" if platform == "tiktok" else "instagram_reel"
     return (video_id, slug, title, f"{video_id}.mp4", duration, content_type, condition, order)
 
 

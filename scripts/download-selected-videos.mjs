@@ -223,6 +223,8 @@ function netscapeCookieLine(cookie) {
 }
 
 function loadStateCookies(storageState) {
+  // TikTok-only runs need no login, so a missing IG storageState is fine.
+  if (!storageState || !fs.existsSync(storageState)) return [];
   const state = JSON.parse(fs.readFileSync(storageState, "utf8"));
   return state.cookies || [];
 }
@@ -310,8 +312,9 @@ async function enrichRows(args, rows, cookieFile, cookieHeader) {
       totalBytes += size;
       out.like_count = api.like_count ?? info.like_count ?? "";
       out.comment_count = api.comment_count ?? info.comment_count ?? "";
-      out.shares = api.shares ?? "";
-      out.shares_source = api.shares_source ?? "";
+      // IG shares come from the media-info API; TikTok exposes repost_count via yt-dlp.
+      out.shares = api.shares ?? info.repost_count ?? "";
+      out.shares_source = api.shares_source || (info.repost_count != null ? "yt_dlp_repost_count" : "");
       out.duration = info.duration ?? "";
       out.filesize_bytes = size || "";
       out.filesize_gib = size ? formatGib(size) : "";
