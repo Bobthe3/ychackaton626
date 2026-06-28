@@ -53,7 +53,8 @@ CREATE TABLE IF NOT EXISTS videos (
   content_type     TEXT,               -- the "kind of media" dimension
   condition        TEXT,
   sort_order       INTEGER,
-  active           INTEGER NOT NULL DEFAULT 1
+  active           INTEGER NOT NULL DEFAULT 1,
+  pinned           INTEGER NOT NULL DEFAULT 0  -- 1 = forced to the front of the feed, un-shuffled, in sort_order
 );
 
 CREATE TABLE IF NOT EXISTS events (

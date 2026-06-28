@@ -15,11 +15,15 @@ Outputs (model/out/):
 """
 from __future__ import annotations
 
+import argparse
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from scipy.stats import spearmanr
 from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.impute import SimpleImputer
@@ -76,18 +80,28 @@ def within_group_spearman(y, yhat, groups) -> float:
     return float(np.average(vals, weights=weights)) if vals else float("nan")
 
 
-def evaluate(df: pd.DataFrame, target: str) -> dict:
+def evaluate(df: pd.DataFrame, target: str, emb_cols: list[str] | None = None,
+             head: str = "ridge", pca: int = 24) -> dict:
     d = df.dropna(subset=[target]).reset_index(drop=True)
-    X = d[FEATURES].apply(pd.to_numeric, errors="coerce")
+    feats = FEATURES + (emb_cols or [])
+    X = d[feats].apply(pd.to_numeric, errors="coerce")
     X["likely_subtitles"] = X["likely_subtitles"].fillna(0)
+    X_arr = X.to_numpy(dtype=float)
     y = d[target].to_numpy(dtype=float)
     groups = d["creator_id"].to_numpy()
     logo = LeaveOneGroupOut()
 
+    if emb_cols:
+        from embed_store import make_embed_pipeline
+        mdls = {f"{head}_emb": make_embed_pipeline(
+            len(FEATURES), len(emb_cols), head=head, pca_dim=pca)}
+    else:
+        mdls = models()
+
     result = {"target": target, "n": len(d), "creators": int(d.creator_id.nunique())}
     preds = {}
-    for name, pipe in models().items():
-        yhat = cross_val_predict(pipe, X, y, groups=groups, cv=logo)
+    for name, pipe in mdls.items():
+        yhat = cross_val_predict(pipe, X_arr, y, groups=groups, cv=logo)
         preds[name] = yhat
         result[name] = {
             "within_creator_spearman": round(within_group_spearman(y, yhat, groups), 4),
@@ -150,25 +164,48 @@ def plot_pred(d, y, yhat, target):
 
 
 def main() -> int:
+    ap = argparse.ArgumentParser(description="Train M1 virality/engagement regressor")
+    ap.add_argument("--embeddings", action="store_true",
+                    help="append pooled SigLIP+CLAP embeddings (run extract_embeddings.py first)")
+    ap.add_argument("--emb-kinds", default="siglip,clap")
+    ap.add_argument("--emb-pca", type=int, default=24, help="PCA dim for pooled embedding block")
+    ap.add_argument("--head", default="ridge", choices=["ridge", "hgb"])
+    args = ap.parse_args()
+
     OUT.mkdir(parents=True, exist_ok=True)
     df = pd.read_csv(ROOT / "model/datasets/video_level.csv")
+
+    emb_cols = None
+    if args.embeddings:
+        from embed_store import EMB_DIR, video_pooled_embeddings
+        kinds = tuple(k.strip() for k in args.emb_kinds.split(",") if k.strip())
+        pooled, emb_cols = video_pooled_embeddings(df["video_id"].tolist(), EMB_DIR, kinds)
+        df = df.merge(pooled, on="video_id", how="left")
+        before = len(df)
+        df = df[df[emb_cols[0]].notna()].reset_index(drop=True)
+        print(f"  embeddings ({'+'.join(kinds)}): {len(df)}/{before} videos covered "
+              f"(pooled mean+std, {len(emb_cols)} dims -> PCA {args.emb_pca}); head={args.head}")
+
     all_results = []
     for target in TARGETS:
-        res, d, X, y, preds = evaluate(df, target)
+        res, d, X, y, preds = evaluate(df, target, emb_cols, args.head, args.emb_pca)
         all_results.append(res)
-        best = max(("hgb", "ridge"), key=lambda m: res[m]["within_creator_spearman"]
+        model_names = list(preds.keys())
+        best = max(model_names, key=lambda m: res[m]["within_creator_spearman"]
                    if not np.isnan(res[m]["within_creator_spearman"]) else -9)
-        plot_importance(X, y, target)
+        if not emb_cols:
+            plot_importance(X, y, target)
         plot_pred(d, y, preds[best], target)
         print(f"\n=== {target}  (n={res['n']}, {res['creators']} creators) ===")
-        for m in ("hgb", "ridge", "baseline_globalmean"):
+        for m in model_names + ["baseline_globalmean"]:
             r = res[m]
             wc = r.get("within_creator_spearman", "—")
             print(f"  {m:20s} within-creator ρ={wc!s:>7}  pooled ρ={r.get('pooled_spearman','—')!s:>7}  "
                   f"MAE={r['mae']:.5f}  R²={r['r2']}")
 
-    (OUT / "m1_results.json").write_text(json.dumps(all_results, indent=2))
-    print(f"\nwrote {OUT/'m1_results.json'} + importance/pred plots")
+    out_name = "m1_results_emb.json" if emb_cols else "m1_results.json"
+    (OUT / out_name).write_text(json.dumps(all_results, indent=2))
+    print(f"\nwrote {OUT/out_name}" + ("" if emb_cols else " + importance/pred plots"))
     return 0
 
 

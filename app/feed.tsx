@@ -1,14 +1,12 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Dimensions, FlatList, type LayoutChangeEvent, Platform, Pressable, StyleSheet, useWindowDimensions, View, type ViewToken } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ActivityIndicator, Dimensions, FlatList, type LayoutChangeEvent, Platform, StyleSheet, useWindowDimensions, View, type ViewToken } from 'react-native';
 import { VideoFeedItem } from '../components/VideoFeedItem';
-import { VolumeOff, VolumeOn } from '../components/icons';
 import { api } from '../lib/api';
 import { shuffleWithSeed } from '../lib/catalog';
 import { events } from '../lib/events';
 import { useSession } from '../lib/session';
-import { colors, space } from '../lib/theme';
+import { colors } from '../lib/theme';
 import type { Video } from '../lib/types';
 
 const CREATOR_GAP = 3;
@@ -70,13 +68,13 @@ function spaceCreators(items: Video[], carry: Video[] = []) {
 
 export default function FeedScreen() {
   const { status, session, markVideoViewed } = useSession();
-  const insets = useSafeAreaInsets();
   const { width: winW } = useWindowDimensions();
   const [playlist, setPlaylist] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [height, setHeight] = useState(Dimensions.get('window').height);
-  const [muted, setMuted] = useState(false);
+  // Videos always play un-muted; the mute toggle was removed (no audio control UI).
+  const muted = false;
 
   // Base pool (regular videos only) + round counter for the infinite,
   // re-randomised feed. Sponsor (B2B) clips are kept apart and re-injected on
@@ -86,6 +84,10 @@ export default function FeedScreen() {
   const b2bStateRef = useRef({ sinceB2B: 0, rotation: 0 });
   const roundsRef = useRef(1);
   const recentTailRef = useRef<Video[]>([]);
+
+  // Imperative handle + keyboard target index for arrow-key navigation (web demo).
+  const listRef = useRef<FlatList<Video>>(null);
+  const targetIndexRef = useRef(0);
 
 
   // On wide screens (desktop web) constrain to a centered 9:16 column so the
@@ -101,7 +103,10 @@ export default function FeedScreen() {
     if (!document.getElementById(id)) {
       const s = document.createElement('style');
       s.id = id;
-      s.textContent = 'video{width:100%!important;height:100%!important;object-fit:cover!important;background:#000;}';
+      // Size the <video> to its container, but do NOT force object-fit globally —
+      // expo-video's per-item contentFit (cover vs contain) must win so b2b clips
+      // letterbox (contain) while UGC fills the column (cover).
+      s.textContent = 'video{width:100%!important;height:100%!important;background:#000;}';
       document.head.appendChild(s);
     }
   }, []);
@@ -127,14 +132,20 @@ export default function FeedScreen() {
       try {
         const list = await api.getPlaylist(session.playlistSeed, session.condition);
         if (!cancelled) {
-          const regular = list.filter((v) => !isB2B(v));
-          basePoolRef.current = regular;
-          b2bPoolRef.current = list.filter(isB2B);
+          // Pinned prefix: render first, in exact server order (no spaceCreators /
+          // interleaveB2B), including the b2b at pinned position 3.
+          const pinned = list.filter((v) => v.pinned);
+          // Everything after the prefix flows through the existing endless machinery.
+          const rest = list.filter((v) => !v.pinned);
+          const restRegular = rest.filter((v) => !isB2B(v));
+          basePoolRef.current = restRegular;
+          b2bPoolRef.current = rest.filter(isB2B);
           b2bStateRef.current = { sinceB2B: 0, rotation: 0 };
           roundsRef.current = 1;
-          const spaced = spaceCreators(regular);
-          recentTailRef.current = spaced.slice(-CREATOR_GAP);
-          setPlaylist(interleaveB2B(spaced, b2bPoolRef.current, b2bStateRef.current));
+          const spacedRest = spaceCreators(restRegular);
+          recentTailRef.current = spacedRest.slice(-CREATOR_GAP);
+          const tail = interleaveB2B(spacedRest, b2bPoolRef.current, b2bStateRef.current);
+          setPlaylist([...pinned, ...tail]);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -160,14 +171,32 @@ export default function FeedScreen() {
   });
   const viewConfigRef = useRef({ itemVisiblePercentThreshold: 80 });
 
+  // Keep the arrow-key target aligned with the card the user is actually on, so
+  // manual scrolling and key-nav stay in agreement.
+  useEffect(() => {
+    targetIndexRef.current = activeIndex;
+  }, [activeIndex]);
+
+  // Web demo: ArrowDown advances exactly one video, ArrowUp goes back one.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      const len = playlist.length;
+      if (len === 0) return;
+      e.preventDefault(); // don't also page-scroll the document
+      const next = Math.max(0, Math.min(len - 1, targetIndexRef.current + (e.key === 'ArrowDown' ? 1 : -1)));
+      if (next === targetIndexRef.current) return;
+      targetIndexRef.current = next;
+      listRef.current?.scrollToIndex({ index: next, animated: true });
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [playlist.length]);
+
   const onLayout = (e: LayoutChangeEvent) => {
     const h = e.nativeEvent.layout.height;
     if (h > 0 && Math.abs(h - height) > 1) setHeight(h);
-  };
-
-  const toggleMute = () => {
-    setMuted((m) => !m);
-    events.log('mute_toggle', { muted: !muted });
   };
 
   // When the user reaches the end of the set, append a freshly shuffled round so
@@ -193,6 +222,7 @@ export default function FeedScreen() {
           </View>
         ) : (
           <FlatList
+            ref={listRef}
             data={playlist}
             keyExtractor={(item, index) => `${item.id}-${index}`}
             renderItem={({ item, index }) => (
@@ -214,13 +244,6 @@ export default function FeedScreen() {
             onEndReachedThreshold={0.6}
           />
         )}
-
-        {/* Top overlay: mute only. No countdown — the timer is silent (SPEC §4). */}
-        <View pointerEvents="box-none" style={[styles.topBar, { paddingTop: insets.top + space.sm }]}>
-          <Pressable onPress={toggleMute} hitSlop={12} style={styles.muteBtn}>
-            {muted ? <VolumeOff size={20} color={colors.text} /> : <VolumeOn size={20} color={colors.text} />}
-          </Pressable>
-        </View>
       </View>
     </View>
   );
@@ -231,22 +254,4 @@ const styles = StyleSheet.create({
   column: { flex: 1, alignSelf: 'center', backgroundColor: colors.bg, position: 'relative', overflow: 'hidden' },
   columnWide: { borderLeftWidth: StyleSheet.hairlineWidth, borderRightWidth: StyleSheet.hairlineWidth, borderColor: colors.border },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  topBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: space.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  muteBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 });

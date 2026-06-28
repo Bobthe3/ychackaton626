@@ -75,6 +75,9 @@ hardware/
 model/datasets/
 model/out/
 model/features/
+model/features_reels/
+model/uploads_catalog/
+model/_uptest/
 
 # ── Merged from team main (Next.js frontend + Python backend + big media) ──
 # Next.js / Vercel (frontend/)
@@ -104,3 +107,16 @@ backend/data/
 .idea/
 .vscode/
 *.swp
+
+# ── Repo cleanup (local scratch / generated artifacts / data dumps) ──
+# HyperFrames demo-video generation working dir (~175M of assets + rendered mp4s)
+hyperframes/
+# Reels-tracker chrome extension (tangential tooling) + its zip artifact
+reels-tracker/
+reels-tracker.zip
+# Local DB exports / ordering manifests (contain absolute machine paths)
+demo-log-events.csv
+hollyordering.csv
+# Unreferenced dev screenshots (root-level only; assets/*.png stays tracked)
+/feed-run-*.png
+/feed-study-localhost.png

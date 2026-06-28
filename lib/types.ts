@@ -26,6 +26,8 @@ export interface Video {
   durationSeconds: number;
   /** The "kind of media" comparison dimension (SPEC §5.2). */
   contentType: string;
+  /** Server-pinned prefix: rendered first, in exact server order (not shuffled/spaced). */
+  pinned?: boolean;
 }
 
 /** A started, timed viewing session. */

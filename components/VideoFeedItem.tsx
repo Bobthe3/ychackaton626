@@ -191,7 +191,7 @@ export function VideoFeedItem({ video, feedPosition, isActive, height, muted }: 
       <VideoView
         player={player}
         style={StyleSheet.absoluteFill}
-        contentFit="cover"
+        contentFit={video.contentType === 'b2b' ? 'contain' : 'cover'}
         nativeControls={false}
       />
 

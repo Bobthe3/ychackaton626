@@ -6,7 +6,8 @@ Usage:
   python3 model/explain.py --features-json path/to/feat.json
 
 Output:  model/out/explain_<id>.json  +  markdown to stdout.
-Falls back to deterministic heuristic if anthropic SDK or ANTHROPIC_API_KEY is absent.
+Uses OpenAI (OPENAI_API_KEY) or Anthropic (ANTHROPIC_API_KEY), auto-loaded from
+model/.env. Falls back to a deterministic heuristic if no key/SDK is available.
 """
 from __future__ import annotations
 import argparse, json, os, sys
@@ -104,24 +105,70 @@ def build_prompt(features: dict, predicted_curve: list | None, weak_windows: lis
 
 # ── LLM call ─────────────────────────────────────────────────────────────────
 
-def call_llm(prompt: str, model: str) -> dict | None:
+def _load_dotenv(path: Path = ROOT / "model" / ".env") -> None:
+    """Load KEY=VALUE lines from model/.env into os.environ (zero-dependency)."""
+    if not path.exists():
+        return
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, _, v = line.partition("=")
+        k, v = k.strip(), v.strip().strip('"').strip("'")
+        if k and v and k not in os.environ:
+            os.environ[k] = v
+
+
+def _strip_fences(text: str) -> str:
+    text = text.strip()
+    if text.startswith("```"):
+        text = "\n".join(l for l in text.splitlines() if not l.startswith("```")).strip()
+    return text
+
+
+def _call_openai(prompt: str, model: str) -> dict | None:
+    try:
+        from openai import OpenAI  # type: ignore
+    except ImportError:
+        return None
+    try:
+        resp = OpenAI().chat.completions.create(
+            model=model, max_completion_tokens=4096,   # newer models reject legacy max_tokens
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": "You are a short-form video growth expert. Reply with ONLY valid JSON — no prose, no markdown fences."},
+                {"role": "user", "content": prompt},
+            ],
+        )
+        return json.loads(_strip_fences(resp.choices[0].message.content))
+    except Exception as e:
+        print(f"[explain] OpenAI call failed: {e}", file=sys.stderr)
+        return None
+
+
+def _call_anthropic(prompt: str, model: str) -> dict | None:
     try:
         import anthropic  # type: ignore
     except ImportError:
         return None
-    if not os.environ.get("ANTHROPIC_API_KEY"):
-        return None
-    client = anthropic.Anthropic()
     try:
-        resp = client.messages.create(model=model, max_tokens=2048,
-                                      messages=[{"role": "user", "content": prompt}])
-        text = resp.content[0].text.strip()
-        if text.startswith("```"):
-            text = "\n".join(l for l in text.splitlines() if not l.startswith("```")).strip()
-        return json.loads(text)
+        resp = anthropic.Anthropic().messages.create(
+            model=model, max_tokens=2048,
+            messages=[{"role": "user", "content": prompt}])
+        return json.loads(_strip_fences(resp.content[0].text))
     except Exception as e:
-        print(f"[explain] LLM call failed: {e}", file=sys.stderr)
+        print(f"[explain] Anthropic call failed: {e}", file=sys.stderr)
         return None
+
+
+def call_llm(prompt: str, model: str) -> dict | None:
+    """Prefer OpenAI (OPENAI_API_KEY), else Anthropic (ANTHROPIC_API_KEY), else None."""
+    _load_dotenv()
+    if os.environ.get("OPENAI_API_KEY"):
+        return _call_openai(prompt, os.environ.get("OPENAI_MODEL", "gpt-4o"))
+    if os.environ.get("ANTHROPIC_API_KEY"):
+        return _call_anthropic(prompt, os.environ.get("ANTHROPIC_MODEL", model))
+    return None
 
 
 # ── heuristic fallback report ─────────────────────────────────────────────────
@@ -218,7 +265,10 @@ def explain(
     llm_result = call_llm(prompt, model)
     llm_used = llm_result is not None
     report = llm_result if llm_used else heuristic_report(features, effective_weak)
-    output = {"video_id": vid, "llm_used": llm_used, "model": model if llm_used else None, **report}
+    used_model = (os.environ.get("OPENAI_MODEL", "gpt-4o") if os.environ.get("OPENAI_API_KEY")
+                  else os.environ.get("ANTHROPIC_MODEL", model) if os.environ.get("ANTHROPIC_API_KEY")
+                  else None)
+    output = {"video_id": vid, "llm_used": llm_used, "model": used_model if llm_used else None, **report}
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"explain_{vid}.json"

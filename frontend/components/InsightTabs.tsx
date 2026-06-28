@@ -3,9 +3,13 @@
 // Sits under the characteristics panel on Screen 1. The first tab ("Browse Clips")
 // shows what the model LEARNED from the current clip + similar clips it predicts
 // will perform; the rest are explanatory blurbs.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { learnedTraits, relatedClips } from "@/lib/demo";
+<<<<<<< Updated upstream
 import GtmPanel from "./GtmPanel";
+=======
+import type { Video } from "@/lib/types";
+>>>>>>> Stashed changes
 
 const TABS: { label: string; body: string; icon?: string }[] = [
   { label: "Browse Clips", body: "" },
@@ -27,7 +31,7 @@ const TABS: { label: string; body: string; icon?: string }[] = [
   { label: "GTM · Orange Slice", body: "", icon: "🍊" },
 ];
 
-export default function InsightTabs() {
+export default function InsightTabs({ video, peakT }: { video?: Video; peakT?: number | null }) {
   const [active, setActive] = useState(0);
   return (
     <div className="space-y-3">
@@ -48,6 +52,7 @@ export default function InsightTabs() {
         ))}
       </div>
 
+<<<<<<< Updated upstream
       {active === 0 ? (
         <BrowseClips />
       ) : TABS[active].label === "GTM · Orange Slice" ? (
@@ -55,16 +60,20 @@ export default function InsightTabs() {
       ) : (
         <p className="text-sm leading-relaxed text-neutral-400">{TABS[active].body}</p>
       )}
+=======
+      {active === 0 ? <BrowseClips video={video} peakT={peakT} /> : <p className="text-sm leading-relaxed text-neutral-400">{TABS[active].body}</p>}
+>>>>>>> Stashed changes
     </div>
   );
 }
 
-function BrowseClips() {
+function BrowseClips({ video, peakT }: { video?: Video; peakT?: number | null }) {
   const [playing, setPlaying] = useState<string | null>(null);
   return (
     <div className="space-y-3">
       <div>
         <div className="text-sm text-neutral-400">What we learned from this clip:</div>
+        <LearnedNarration video={video} peakT={peakT} />
         <div className="mt-1.5 flex flex-wrap gap-1.5">
           {learnedTraits.map((t, i) => (
             <span key={t} style={{ animationDelay: `${i * 110}ms` }} className="reveal rounded-full border border-neutral-700 px-2 py-0.5 text-xs text-neutral-300">
@@ -119,5 +128,63 @@ function BrowseClips() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Live narration of what the model learned about the playing clip — streamed from
+// /api/decode (an OpenAI Realtime session, text modality + a get_clip_characteristics
+// tool call). Gracefully renders nothing (the trait pills stay) when the decode
+// route is unavailable, e.g. OPENAI_API_KEY isn't set.
+function LearnedNarration({ video, peakT }: { video?: Video; peakT?: number | null }) {
+  const [text, setText] = useState("");
+  const [status, setStatus] = useState<"idle" | "streaming" | "done" | "off">("idle");
+
+  useEffect(() => {
+    if (!video) return;
+    const ctrl = new AbortController();
+    setText("");
+    setStatus("streaming");
+    (async () => {
+      try {
+        const res = await fetch("/api/decode", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            characteristics: video.characteristics,
+            creator: video.metadata.creator,
+            duration_ms: video.metadata.duration_ms,
+            peak_t: peakT ?? null,
+            learnedTraits,
+          }),
+          signal: ctrl.signal,
+        });
+        if (!res.ok || !res.body) {
+          setStatus("off"); // 503 (no key) or error → fall back to the static pills
+          return;
+        }
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          setText((t) => t + dec.decode(value, { stream: true }));
+        }
+        setStatus("done");
+      } catch {
+        if (!ctrl.signal.aborted) setStatus("off");
+      }
+    })();
+    return () => ctrl.abort();
+  }, [video?.video_id, peakT]);
+
+  if (status === "idle" || status === "off") return null;
+  if (status === "done" && !text) return null; // nothing came back → keep the pills only
+  return (
+    <p className="mt-1.5 text-sm leading-relaxed text-[#cfeeff]">
+      {text || <span className="text-neutral-500">decoding clip…</span>}
+      {status === "streaming" && text && (
+        <span className="ml-0.5 inline-block h-3.5 w-[3px] animate-pulse bg-[#9fe9ff] align-middle" />
+      )}
+    </p>
   );
 }
