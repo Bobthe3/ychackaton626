@@ -51,13 +51,14 @@ export default function InsightTabs() {
 }
 
 function BrowseClips() {
+  const [playing, setPlaying] = useState<string | null>(null);
   return (
     <div className="space-y-3">
       <div>
         <div className="text-sm text-neutral-400">What we learned from this clip:</div>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {learnedTraits.map((t) => (
-            <span key={t} className="rounded-full border border-neutral-700 px-2 py-0.5 text-xs text-neutral-300">
+          {learnedTraits.map((t, i) => (
+            <span key={t} style={{ animationDelay: `${i * 110}ms` }} className="reveal rounded-full border border-neutral-700 px-2 py-0.5 text-xs text-neutral-300">
               {t}
             </span>
           ))}
@@ -65,26 +66,47 @@ function BrowseClips() {
       </div>
 
       <div>
-        <div className="mb-2 text-xs uppercase tracking-wide text-neutral-500">clips predicted to perform similarly</div>
+        <div className="reveal mb-2 text-xs uppercase tracking-wide text-neutral-500" style={{ animationDelay: "480ms" }}>clips predicted to perform similarly</div>
         <div className="grid grid-cols-3 gap-2.5">
-          {relatedClips.map((c) => (
-            <div key={c.title}>
-              <div className="group relative aspect-[9/16] overflow-hidden rounded-lg border border-neutral-800 bg-gradient-to-b from-neutral-700/60 to-neutral-950">
-                {c.thumb && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.thumb} alt={c.title} className="h-full w-full object-cover" />
-                )}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black/45 text-xs text-white backdrop-blur-sm">▶</span>
+          {relatedClips.map((c, i) => {
+            const isPlaying = playing === c.title;
+            return (
+              <div key={c.title} className="reveal" style={{ animationDelay: `${600 + i * 150}ms` }}>
+                <div className="group relative aspect-[9/16] overflow-hidden rounded-lg border border-neutral-800 bg-gradient-to-b from-neutral-700/60 to-neutral-950">
+                  {isPlaying && c.clip ? (
+                    <video
+                      src={c.clip}
+                      className="h-full w-full object-cover"
+                      controls
+                      autoPlay
+                      playsInline
+                      onEnded={() => setPlaying(null)}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => c.clip && setPlaying(c.title)}
+                      className="absolute inset-0 h-full w-full cursor-pointer"
+                      aria-label={`Play ${c.title}`}
+                    >
+                      {c.thumb && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={c.thumb} alt={c.title} className="h-full w-full object-cover" />
+                      )}
+                      <span className="absolute inset-0 flex items-center justify-center">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black/45 text-xs text-white backdrop-blur-sm">▶</span>
+                      </span>
+                      <span className="absolute right-1 top-1 rounded bg-black/60 px-1 py-0.5 text-[10px] font-medium tabular-nums text-green-300">
+                        {c.score.toFixed(2)}
+                      </span>
+                    </button>
+                  )}
                 </div>
-                <span className="absolute right-1 top-1 rounded bg-black/60 px-1 py-0.5 text-[10px] font-medium tabular-nums text-green-300">
-                  {c.score.toFixed(2)}
-                </span>
+                <div className="mt-1 truncate text-xs text-neutral-200">{c.title}</div>
+                <div className="truncate text-[11px] text-neutral-500">{c.creator}</div>
               </div>
-              <div className="mt-1 truncate text-xs text-neutral-200">{c.title}</div>
-              <div className="truncate text-[11px] text-neutral-500">{c.creator}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
