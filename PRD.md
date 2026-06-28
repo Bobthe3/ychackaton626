@@ -53,22 +53,22 @@ better for a demo.
 to see *why* → feature walkthrough → **judge interaction** (Aaron/Sarah wear it, compare taste)
 → more data = more accuracy → *"stop spraying and praying, use science."*
 
-### Closing easter egg — Fiber AI as our GTM (sponsor bonus, NOT a product feature)
+### Closing easter egg — Orange Slice as our GTM workflow (sponsor bonus, NOT a product feature)
 
-Fiber is a B2B prospecting/recruiting database — it finds **business decision-makers**, not the
-(usually anonymous) editors behind a viral clip. So it does **not** fit inside the product. Its one
-honest, on-narrative use is **our own go-to-market**, as a 10-second closing beat:
+Orange Slice is a go-to-market engineering platform: an agentic spreadsheet / agent package for
+building revenue workflows through code. It fits this closing beat because it is about **turning a
+signal into a growth workflow**, not pretending we can identify anonymous editors behind a viral clip.
 
-> *"So who buys NeuroViral? We used Fiber (a sponsor) to pull the Heads of Growth / Marketing at
-> the companies that run UGC — that's our outbound list. We know what makes content go viral; Fiber
-> tells us who to sell that to."*
+> *"NeuroViral tells you what content will spike attention. Orange Slice turns that signal into the
+> GTM workflow: find the right Heads of Growth, enrich them, and launch the outbound sequence."*
 
-- **What it is:** one `peopleSearch` for "Head of Growth/Marketing at \<consumer/UGC brands\>" →
-  show a short list of real, contactable buyers on a slide.
+- **What it is:** one prebuilt Orange Slice workflow / agentic spreadsheet row:
+  `ICP: Head of Growth at UGC-heavy B2B/consumer brands` → enrich → draft outbound using the winning
+  hook/format from NeuroViral.
 - **Why this and not "recruit the creator":** the people in our (sponsor/founder-fronted) demo clips
-  are founders you can't recruit, and the actual video editors aren't in a B2B database. GTM is the
-  only place Fiber genuinely fits.
-- **Rule:** keep it to one slide / one line. It earns sponsor eligibility without muddling the core
+  are founders you can't recruit, and the actual video editors are usually not attributable. GTM is
+  the honest sponsor tie-in.
+- **Rule:** keep it to one slide / one line. It earns sponsor relevance without muddling the core
   EEG → virality story. Cut it if the pitch runs long.
 
 ---
@@ -195,7 +195,7 @@ honest, on-narrative use is **our own go-to-market**, as a 10-second closing bea
 | **Model: video → waveform** | Fine-tune on requested dataset **if it arrives**, else simulate | **Devan** | Demo-grade; see §10 |
 | **Color profile extraction** | ffmpeg + simple avg-color-per-scene script | **Holly** | Cheap, visually striking; Holly renders it anyway, so she owns extraction too |
 | **Deploy** | Vercel (UI) + small box/Render (Python EEG server runs local on demo machine) | Devan | Demo URLs; EEG must be local to the headset |
-| **GTM list (bonus)** | **Fiber AI (sponsor)** — one `peopleSearch` for Heads of Growth/Marketing at UGC brands; `x-api-key` auth | **Holly** | Closing easter egg only (see §3); Holly delivers it. **Not** in the product. Can be pulled once offline for a slide. Cut if pitch runs long |
+| **GTM workflow (bonus)** | **Orange Slice (sponsor)** — agentic spreadsheet / agent package for `ICP → enrich → outbound` | **Holly** | Closing easter egg only (see §3); Holly delivers it. **Not** in the product. Can be prebuilt once offline for a slide. Cut if pitch runs long |
 | **Build accelerant** | Claude Code | all | Lean on it for ML / unfamiliar parts |
 
 **One real decision:** UI in **Next.js/TS**, EEG + model in **Python**, talking over **WebSocket**

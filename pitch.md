@@ -8,7 +8,7 @@
   interaction (Aaron/Sarah)**, and **the sponsor-video easter egg (§2)**. Main voice.
 - **Devan** — the product feature walkthrough (mainly the product).
 - **Holly** — wears the EEG headset the whole time (visual hook); demos the screens; **delivers the
-  Fiber API / GTM closing beat (§6)**.
+  Orange Slice / GTM workflow closing beat (§6)**.
 
 ---
 
@@ -63,15 +63,15 @@
 - The kicker: ***"Stop spraying and praying. Use science to go viral"*** — *"so your friends
   don't clown you (get less chopped) for not going viral."*
 
-## 6. Closing easter egg — Fiber AI / GTM (optional, ~15s) — **Holly**
-- Holly closes: *"And who do we sell this to? We used **Fiber** (a sponsor) — literally one
-  `peopleSearch` call — to pull the Heads of Growth at UGC brands. That's our outbound list. We know
-  what goes viral; Fiber tells us who to sell it to."*
-- Holly can flash the **actual API call** (`peopleSearch`, `x-api-key`) on screen for ~2s as proof
-  we really used it — ties the sponsor in concretely.
-- One slide, one call. Sponsor eligibility without muddling the story. **First thing to cut if long.**
-- ⚠️ Do **not** pitch Fiber as "find/recruit the creator" — the people in our clips are founders,
-  and editors aren't in a B2B database. GTM is the only honest fit.
+## 6. Closing easter egg — Orange Slice / GTM workflow (optional, ~15s) — **Holly**
+- Holly closes: *"And this is not just an insight dashboard. We used **Orange Slice** to turn the
+  signal into a GTM workflow: find Heads of Growth at UGC-heavy companies, enrich them, and draft
+  outbound around the exact hook format that spiked attention."*
+- Holly can flash the **actual Orange Slice agentic spreadsheet/workflow** for ~2s as proof we used
+  the sponsor — it ties the sponsor in without pretending Orange Slice is part of the EEG product.
+- One slide, one workflow. Sponsor relevance without muddling the story. **First thing to cut if long.**
+- ⚠️ Do **not** pitch this as "find/recruit the creator" — the people in our clips are often founders,
+  and the actual video editors aren't reliably attributable. Orange Slice is the GTM execution layer.
 
 ---
 
