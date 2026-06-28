@@ -38,16 +38,16 @@ export default function LivePage() {
   const isReal = !!video?.url && !video.url.includes("example.com");
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-5">
-      {/* video + characteristics — 50/50 split with a center divider */}
-      <div className="grid grid-cols-[1fr_1px_1fr] items-stretch gap-8">
-        {/* video stage — fixed height, fits a 9:16 reel OR a 16:9 clip via object-contain */}
-        <div className="flex h-[440px] items-center justify-center">
+    <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-5">
+      {/* 3 columns: video | insight tabs (middle) | now-playing + characteristics (right) */}
+      <div className="grid grid-cols-[270px_1px_minmax(0,1.4fr)_1px_minmax(0,1fr)] items-stretch gap-6">
+        {/* LEFT — video stage (fits a 9:16 reel or 16:9 clip via object-contain) */}
+        <div className="flex h-[460px] items-center justify-center">
           {isReal ? (
             <video
               ref={videoRef}
               src={video!.url}
-              className="h-full w-auto max-w-[560px] rounded-2xl border border-neutral-800 bg-black object-contain"
+              className="h-full w-auto max-w-[270px] rounded-2xl border border-neutral-800 bg-black object-contain"
               playsInline controls
               onPlay={() => setStarted(true)}
             />
@@ -62,13 +62,23 @@ export default function LivePage() {
           )}
         </div>
 
-        {/* center divider */}
         <div className="bg-neutral-800/80" />
 
-        {/* info column — appears only after the clip starts playing; capped to
-            the video height, scrolls internally so the waveform stays on screen */}
-        <div className="h-[440px] w-full space-y-3 overflow-y-auto pr-2">
-          {/* now playing — always shown as the basic intro */}
+        {/* MIDDLE — insight tabs: browse clips / learned / related grid */}
+        <div className="h-[460px] overflow-y-auto pr-2">
+          {started ? (
+            <InsightTabs />
+          ) : (
+            <div className="flex h-full items-center justify-center text-center text-sm text-neutral-600">
+              ▶ press play to surface similar clips
+            </div>
+          )}
+        </div>
+
+        <div className="bg-neutral-800/80" />
+
+        {/* RIGHT — now playing + characteristics */}
+        <div className="h-[460px] space-y-3 overflow-y-auto pr-2">
           <div>
             <div className="text-xs uppercase tracking-wide text-neutral-500">now playing</div>
             <div className="mt-1 text-lg font-semibold leading-tight">{title ?? "—"}</div>
@@ -78,14 +88,9 @@ export default function LivePage() {
           </div>
 
           {started ? (
-            <>
-              <div className="reveal" style={{ animationDelay: "60ms" }}>
-                {video && <CharacteristicsPanel video={video} videoRef={videoRef} />}
-              </div>
-              <div className="reveal" style={{ animationDelay: "280ms" }}>
-                <InsightTabs />
-              </div>
-            </>
+            <div className="reveal" style={{ animationDelay: "60ms" }}>
+              {video && <CharacteristicsPanel video={video} videoRef={videoRef} />}
+            </div>
           ) : (
             <>
               <p className="text-sm leading-relaxed text-neutral-400">{video?.characteristics.transcript_summary}</p>

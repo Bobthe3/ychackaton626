@@ -57,8 +57,8 @@ function BrowseClips() {
       <div>
         <div className="text-sm text-neutral-400">What we learned from this clip:</div>
         <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {learnedTraits.map((t) => (
-            <span key={t} className="rounded-full border border-neutral-700 px-2 py-0.5 text-xs text-neutral-300">
+          {learnedTraits.map((t, i) => (
+            <span key={t} style={{ animationDelay: `${i * 110}ms` }} className="reveal rounded-full border border-neutral-700 px-2 py-0.5 text-xs text-neutral-300">
               {t}
             </span>
           ))}
@@ -66,12 +66,12 @@ function BrowseClips() {
       </div>
 
       <div>
-        <div className="mb-2 text-xs uppercase tracking-wide text-neutral-500">clips predicted to perform similarly</div>
+        <div className="reveal mb-2 text-xs uppercase tracking-wide text-neutral-500" style={{ animationDelay: "480ms" }}>clips predicted to perform similarly</div>
         <div className="grid grid-cols-3 gap-2.5">
-          {relatedClips.map((c) => {
+          {relatedClips.map((c, i) => {
             const isPlaying = playing === c.title;
             return (
-              <div key={c.title}>
+              <div key={c.title} className="reveal" style={{ animationDelay: `${600 + i * 150}ms` }}>
                 <div className="group relative aspect-[9/16] overflow-hidden rounded-lg border border-neutral-800 bg-gradient-to-b from-neutral-700/60 to-neutral-950">
                   {isPlaying && c.clip ? (
                     <video
