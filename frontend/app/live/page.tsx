@@ -39,8 +39,8 @@ export default function LivePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-5">
-      {/* 3 columns: video | insight tabs (middle) | now-playing + characteristics (right) */}
-      <div className="grid grid-cols-[270px_1px_minmax(0,1.4fr)_1px_minmax(0,1fr)] items-stretch gap-6">
+      {/* 3 columns on wide screens; stacks vertically below xl */}
+      <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[270px_1px_minmax(0,1.4fr)_1px_minmax(0,1fr)] xl:items-stretch">
         {/* LEFT — video stage (fits a 9:16 reel or 16:9 clip via object-contain) */}
         <div className="flex h-[460px] items-center justify-center">
           {isReal ? (
@@ -62,10 +62,10 @@ export default function LivePage() {
           )}
         </div>
 
-        <div className="bg-neutral-800/80" />
+        <div className="hidden bg-neutral-800/80 xl:block" />
 
         {/* MIDDLE — insight tabs: browse clips / learned / related grid */}
-        <div className="h-[460px] overflow-y-auto pr-2">
+        <div className="pr-2 xl:h-[460px] xl:overflow-y-auto">
           {started ? (
             <InsightTabs />
           ) : (
@@ -75,10 +75,10 @@ export default function LivePage() {
           )}
         </div>
 
-        <div className="bg-neutral-800/80" />
+        <div className="hidden bg-neutral-800/80 xl:block" />
 
         {/* RIGHT — now playing + characteristics */}
-        <div className="h-[460px] space-y-3 overflow-y-auto pr-2">
+        <div className="space-y-3 pr-2 xl:h-[460px] xl:overflow-y-auto">
           <div>
             <div className="text-xs uppercase tracking-wide text-neutral-500">now playing</div>
             <div className="mt-1 text-lg font-semibold leading-tight">{title ?? "—"}</div>
