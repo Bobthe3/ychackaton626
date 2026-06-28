@@ -116,18 +116,65 @@ export function createApp(env: AppEnv): Hono {
   });
 
   // --- GET /api/playlist?seed=... ---
+  // Pinned videos (pinned=1) lead the feed FIRST, in ascending sort_order,
+  // un-shuffled. Everything else (the endless "rest" pool) is shuffled by seed
+  // and appended. This applies hollyordering.csv as the start of the feed.
   app.get('/api/playlist', async (c) => {
     const seed = c.req.query('seed') ?? 'default';
     const { results } = await db
-      .prepare('SELECT id, slug, title, r2_key, duration_seconds, content_type FROM videos WHERE active = 1 ORDER BY sort_order')
-      .all<{ id: string; slug: string; title: string; r2_key: string; duration_seconds: number; content_type: string }>();
+      .prepare('SELECT id, slug, title, r2_key, duration_seconds, content_type, pinned FROM videos WHERE active = 1 ORDER BY sort_order')
+      .all<{ id: string; slug: string; title: string; r2_key: string; duration_seconds: number; content_type: string; pinned: number }>();
 
     const origin = new URL(c.req.url).origin;
-    const videos = (results ?? []).map((r) => {
+    const toVideo = (r: { id: string; slug: string; title: string; r2_key: string; duration_seconds: number; content_type: string; pinned: number }) => {
       const url = `${origin}/video/${r.r2_key}`;
-      return { id: r.id, slug: r.slug, title: r.title, url, source: url, durationSeconds: r.duration_seconds, contentType: r.content_type };
-    });
-    return c.json(shuffleWithSeed(videos, seed));
+      return { id: r.id, slug: r.slug, title: r.title, url, source: url, durationSeconds: r.duration_seconds, contentType: r.content_type, pinned: !!r.pinned };
+    };
+
+    const rows = results ?? [];
+    // Already sorted by sort_order, so pinned come out in ascending order.
+    const pinnedInOrder = rows.filter((r) => r.pinned).map(toVideo);
+    const shuffledRest = shuffleWithSeed(rows.filter((r) => !r.pinned).map(toVideo), seed);
+    return c.json([...pinnedInOrder, ...shuffledRest]);
+  });
+
+  // --- GET /api/videos ---
+  // Catalog endpoint for the NeuroViral web frontend (Holly's /live, /report,
+  // /log). Returns the active catalog shaped to the shared `Video` contract
+  // (frontend/lib/types.ts): real streamable `url`, `title`, `duration_ms`, and
+  // `creator` derived from the slug. Characteristics this catalog doesn't carry
+  // (cut_count, on-screen text, subtitles, audio mix) come back as safe defaults
+  // — /live's movie-barcode + waveform are computed client-side, so the demo
+  // stays driven by the real clips rather than these fields.
+  app.get('/api/videos', async (c) => {
+    const { results } = await db
+      .prepare('SELECT id, slug, title, r2_key, duration_seconds FROM videos WHERE active = 1 ORDER BY sort_order')
+      .all<{ id: string; slug: string; title: string; r2_key: string; duration_seconds: number }>();
+
+    const origin = new URL(c.req.url).origin;
+    // slug is "<creator_handle>_<shortcode>" — drop the trailing id token.
+    const creatorOf = (slug: string | null) => {
+      if (!slug) return '';
+      const parts = slug.split('_');
+      return parts.length > 1 ? `@${parts.slice(0, -1).join('_')}` : `@${slug}`;
+    };
+
+    const videos = (results ?? []).map((r) => ({
+      video_id: r.id,
+      url: `${origin}/video/${r.r2_key}`,
+      characteristics: {
+        audio: 'music+VO',
+        transcript_summary: r.title ?? '',
+        cut_count: 0,
+        on_screen_text: '',
+        subtitles: false,
+      },
+      metadata: {
+        duration_ms: Math.round((r.duration_seconds ?? 0) * 1000),
+        creator: creatorOf(r.slug),
+      },
+    }));
+    return c.json(videos);
   });
 
   // --- POST /api/events  (batch) ---
