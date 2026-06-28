@@ -1,5 +1,15 @@
 # FlowState Testing
 
+> **Repo orientation (two lines on `main`).** This repository currently holds two parallel
+> workstreams that share `main`:
+> - **FlowState Expo app** (this README) — the shipped research app: `app/` · `components/` ·
+>   `lib/` · `server/` · `scripts/` · `model/` · `docs/`.
+> - **Original NeuroViral team scaffold** — `frontend/` (Holly's Next.js demo screens) ·
+>   `backend/` (EEG WS server, precompute, Cloudflare API, model) · `contracts/` (shared
+>   schemas) + planning docs. See [§ Team scaffold](#team-scaffold-original-neuroviral-structure).
+>
+> **Frontend team:** start with [`docs/FRONTEND-HANDOFF.md`](./docs/FRONTEND-HANDOFF.md).
+
 Internal research app for observing **retention and engagement across different kinds
 of short-form media**. A Reels-style looping video feed gated behind an access code +
 consent + demographics, running a silent timed session that captures rich interaction
@@ -158,3 +168,27 @@ server/              local Node API server (Hono + SQLite + on-disk video)
 2. Add real clips to `assets/videos/`, list them in `server/seed.sql` (and `lib/catalog.ts`
    for mock mode). For a device build, host the server on a reachable URL (or your LAN IP).
 3. Apple Developer Program → `npx eas build -p ios` → `npx eas submit`.
+
+---
+
+## Team scaffold (original NeuroViral structure)
+
+The original team layout still lives on `main` alongside the FlowState app. **NeuroViral** —
+*wear an EEG, watch short-form videos, and let your own brain tell you which ones will go
+viral before you spend on ads* (YC Growth Hackathon).
+
+```
+contracts/    SHARED interface (§6 schema) + mocks. Lock once; changing it = ping the other.
+frontend/     HOLLY — Next.js 3-screen app (live/log/report) + components + lib + color script.
+backend/      DEVAN — Python: EEG WebSocket server, precompute, Cloudflare API, model.
+```
+
+**Merge discipline:** Holly edits `frontend/`, Devan edits `backend/`, both agree on
+`contracts/` once. Work on separate branches (`holly-frontend`, `devan-backend`) → PR into `main`.
+
+- Frontend: [`frontend/README.md`](./frontend/README.md) — runs on mocks with zero backend.
+- Backend: [`backend/README.md`](./backend/README.md) · Interface: [`contracts/README.md`](./contracts/README.md).
+- Docs: [`PRD.md`](./PRD.md) · [`prd-holly.md`](./prd-holly.md) · [`pitch.md`](./pitch.md) ·
+  [`transcript.md`](./transcript.md) · [`transcript-summary.md`](./transcript-summary.md)
+
+**Team:** Holly (front-end / 3 screens) · Devan (model + backend) · Yuva (pitch / founder).
