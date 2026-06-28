@@ -69,11 +69,11 @@ export default function Waveform({ samples }: { samples: EegSample[] }) {
         <polyline
           points={predictLine}
           fill="none"
-          stroke="#64748b"
+          stroke="#4ade80"
           strokeWidth="1.75"
           strokeDasharray="5 5"
           strokeLinejoin="round"
-          opacity="0.7"
+          opacity="0.45"
         />
       )}
 
@@ -83,8 +83,8 @@ export default function Waveform({ samples }: { samples: EegSample[] }) {
       {/* legend */}
       {hasPredict && (
         <g fontSize="11" transform={`translate(${W - 150}, 16)`}>
-          <line x1="0" y1="0" x2="16" y2="0" stroke="#64748b" strokeWidth="1.75" strokeDasharray="5 5" />
-          <text x="20" y="4" fill="#94a3b8">predict</text>
+          <line x1="0" y1="0" x2="16" y2="0" stroke="#4ade80" strokeWidth="1.75" strokeDasharray="5 5" opacity="0.55" />
+          <text x="20" y="4" fill="#4ade80" opacity="0.7">predict</text>
           <line x1="74" y1="0" x2="90" y2="0" stroke="#4ade80" strokeWidth="2.5" />
           <text x="94" y="4" fill="#86efac">real</text>
         </g>
