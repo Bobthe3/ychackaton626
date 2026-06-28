@@ -5,11 +5,8 @@
 // will perform; the rest are explanatory blurbs.
 import { useEffect, useState } from "react";
 import { learnedTraits, relatedClips } from "@/lib/demo";
-<<<<<<< Updated upstream
 import GtmPanel from "./GtmPanel";
-=======
 import type { Video } from "@/lib/types";
->>>>>>> Stashed changes
 
 const TABS: { label: string; body: string; icon?: string }[] = [
   { label: "Browse Clips", body: "" },
@@ -52,17 +49,13 @@ export default function InsightTabs({ video, peakT }: { video?: Video; peakT?: n
         ))}
       </div>
 
-<<<<<<< Updated upstream
       {active === 0 ? (
-        <BrowseClips />
+        <BrowseClips video={video} peakT={peakT} />
       ) : TABS[active].label === "GTM · Orange Slice" ? (
         <GtmPanel />
       ) : (
         <p className="text-sm leading-relaxed text-neutral-400">{TABS[active].body}</p>
       )}
-=======
-      {active === 0 ? <BrowseClips video={video} peakT={peakT} /> : <p className="text-sm leading-relaxed text-neutral-400">{TABS[active].body}</p>}
->>>>>>> Stashed changes
     </div>
   );
 }

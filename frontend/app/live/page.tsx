@@ -82,24 +82,19 @@ export default function LivePage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-5">
-<<<<<<< Updated upstream
-      {/* 3 columns on wide screens; stacks vertically below xl */}
-      <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[270px_1px_minmax(0,1.4fr)_1px_minmax(0,1fr)] xl:items-stretch">
-=======
-      <div className="flex items-center justify-between border-b border-neutral-800/80 pb-3">
+      <div className="flex flex-col gap-3 border-b border-neutral-800/80 pb-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="text-[11px] uppercase tracking-[0.24em] text-neutral-500">NeuroViral live decode</div>
           <div className="mt-1 text-xl font-semibold tracking-tight text-neutral-100">Clip in, predicted brainwave out</div>
         </div>
-        <div className="flex items-center gap-2 text-xs text-neutral-400">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-400">
           <span className="rounded-full border border-[#2f8fd6]/45 bg-[#2f8fd6]/10 px-2.5 py-1 text-[#9fe9ff]">model ready</span>
           <span className="rounded-full border border-neutral-700 px-2.5 py-1">EEG overlay armed</span>
         </div>
       </div>
 
-      {/* 3 columns: video | insight tabs (middle) | now-playing + characteristics (right) */}
-      <div className="grid grid-cols-[270px_1px_minmax(0,1.4fr)_1px_minmax(0,1fr)] items-stretch gap-6">
->>>>>>> Stashed changes
+      {/* 3 columns on wide screens; stacks vertically below xl */}
+      <div className="flex flex-col gap-6 xl:grid xl:grid-cols-[270px_1px_minmax(0,1.4fr)_1px_minmax(0,1fr)] xl:items-stretch">
         {/* LEFT — video stage (fits a 9:16 reel or 16:9 clip via object-contain) */}
         <div className="flex h-[460px] items-center justify-center">
           {isReal ? (
@@ -134,13 +129,8 @@ export default function LivePage() {
 
         <div className="hidden bg-neutral-800/80 xl:block" />
 
-<<<<<<< Updated upstream
-        {/* MIDDLE — insight tabs: browse clips / learned / related grid */}
-        <div className="pr-2 xl:h-[460px] xl:overflow-y-auto">
-=======
         {/* MIDDLE — live chat: the analyst narrates what the model learned, then you can ask back */}
-        <div className="h-[460px] pr-2">
->>>>>>> Stashed changes
+        <div className="min-h-[460px] pr-2 xl:h-[460px]">
           {started ? (
             <ClipChat
               video={video}

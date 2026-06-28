@@ -12,17 +12,11 @@
   "dependencies": {
     "next": "^14.2.5",
     "openai": "^4.56.0",
-<<<<<<< Updated upstream
     "orangeslice": "^2.6.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "uplot": "^1.6.30"
-=======
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "uplot": "^1.6.30",
     "ws": "^8.21.0"
->>>>>>> Stashed changes
   },
   "devDependencies": {
     "@types/node": "^20",
