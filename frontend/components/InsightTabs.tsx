@@ -5,6 +5,7 @@
 // will perform; the rest are explanatory blurbs.
 import { useState } from "react";
 import { learnedTraits, relatedClips } from "@/lib/demo";
+import GtmPanel from "./GtmPanel";
 
 const TABS = [
   { label: "Browse Clips", body: "" },
@@ -23,6 +24,7 @@ const TABS = [
     body:
       "We track the theta/beta band-power ratio from forehead electrodes — engagement rises as theta/beta falls. The first system to predict short-form virality response at this resolution for people it has never interacted with.",
   },
+  { label: "GTM · Orange Slice", body: "" },
 ];
 
 export default function InsightTabs() {
@@ -45,7 +47,13 @@ export default function InsightTabs() {
         ))}
       </div>
 
-      {active === 0 ? <BrowseClips /> : <p className="text-sm leading-relaxed text-neutral-400">{TABS[active].body}</p>}
+      {active === 0 ? (
+        <BrowseClips />
+      ) : TABS[active].label === "GTM · Orange Slice" ? (
+        <GtmPanel />
+      ) : (
+        <p className="text-sm leading-relaxed text-neutral-400">{TABS[active].body}</p>
+      )}
     </div>
   );
 }

@@ -31,7 +31,7 @@ export default async function ReportPage() {
         </ol>
       </section>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <section className="rounded-xl border border-neutral-800 bg-neutral-900/40 p-4">
           <h2 className="mb-3 text-xs uppercase tracking-wide text-neutral-500">What wins</h2>
           <ul className="space-y-1.5 text-sm text-neutral-300">
