@@ -1,0 +1,14 @@
+# EEG
+brainflow
+numpy
+scipy
+
+# WebSocket server
+websockets
+
+# precompute (characteristics)
+openai-whisper ; python_version >= "3.9"   # transcript (or use faster-whisper)
+# scenedetect                               # cut detection (optional)
+
+# model
+scikit-learn

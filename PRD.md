@@ -201,9 +201,7 @@ signal into a growth workflow**, not pretending we can identify anonymous editor
 **One real decision:** UI in **Next.js/TS**, EEG + model in **Python**, talking over **WebSocket**
 (live waveform) + **HTTP** (video/chat). Don't do EEG or fine-tuning in JS.
 
-### Planned repo structure (to BUILD at the hackathon — no code committed yet)
-
-> ⚠️ This is the *target* layout we'll create **during** the event, not pre-written code.
+### Repo structure (scaffolded)
 
 ```
 ychackaton626/

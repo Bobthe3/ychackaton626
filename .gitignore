@@ -1,0 +1,36 @@
+# --- secrets (NEVER commit) ---
+.env
+.env.local
+.env*.local
+*.key
+
+# --- node / frontend ---
+node_modules/
+.next/
+out/
+dist/
+npm-debug.log*
+yarn-error.log*
+.vercel
+
+# --- python / backend ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.ipynb_checkpoints/
+
+# --- data / models (big, don't commit) ---
+*.mp4
+*.edf
+*.bdf
+backend/model/checkpoints/
+backend/data/
+
+# --- os / editor ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
