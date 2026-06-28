@@ -29,6 +29,8 @@ export default function LivePage() {
   const video = videos[current];
   const latest = samples[samples.length - 1];
   const title = video?.characteristics.transcript_summary.split("—")[0].trim();
+  // real mp4 vs mock → show <video> only for real files (mocks point at example.com)
+  const isReal = !!video?.url && !video.url.includes("example.com");
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-5">
@@ -44,16 +46,28 @@ export default function LivePage() {
       </div>
 
       {/* video + characteristics */}
-      <div className="grid grid-cols-[260px_1fr] gap-6">
-        <div className="relative flex aspect-[9/16] items-end overflow-hidden rounded-2xl border border-neutral-800 bg-gradient-to-b from-neutral-800 to-neutral-950">
-          {/* Real MP4 swaps in here; styled reel placeholder for now */}
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-4xl text-neutral-700">▶</div>
-          <div className="relative w-full bg-gradient-to-t from-black/80 to-transparent p-3 text-xs text-neutral-300">
-            {title ?? "loading…"}
-          </div>
+      <div className="flex flex-wrap items-start gap-8">
+        {/* video stage — fixed height, fits a 9:16 reel OR a 16:9 clip via object-contain */}
+        <div className="flex h-[440px] shrink-0 items-center justify-center">
+          {isReal ? (
+            <video
+              src={video!.url}
+              className="h-full w-auto max-w-[560px] rounded-2xl border border-neutral-800 bg-black object-contain"
+              autoPlay muted loop playsInline
+            />
+          ) : (
+            <div className="relative flex h-full w-auto items-end overflow-hidden rounded-2xl border border-neutral-800 bg-gradient-to-b from-neutral-800 to-neutral-950"
+                 style={{ aspectRatio: "9 / 16" }}>
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-4xl text-neutral-700">▶</div>
+              <div className="relative w-full bg-gradient-to-t from-black/80 to-transparent p-3 text-xs text-neutral-300">
+                {title ?? "loading…"}
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="space-y-3">
+        {/* info column — capped so it doesn't stretch */}
+        <div className="w-full max-w-sm space-y-3">
           <div>
             <div className="text-xs uppercase tracking-wide text-neutral-500">now playing</div>
             <div className="mt-1 text-lg font-semibold leading-tight">{title ?? "—"}</div>

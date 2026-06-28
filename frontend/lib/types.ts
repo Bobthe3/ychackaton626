@@ -28,7 +28,8 @@ export interface EegSample {
   video_id: string;
   video_t_ms: number; // waveform x-axis
   theta_beta: number;
-  interest_score: number; // 0-1, waveform y-axis
+  interest_score: number; // 0-1, the REAL measured attention (waveform y-axis)
+  predict_score?: number; // 0-1, model-predicted attention (overlaid "predict" layer)
 }
 
 /** Holly's own client-side extraction (NOT from Devan), keyed by video_id. */
