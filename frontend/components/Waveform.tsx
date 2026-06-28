@@ -8,7 +8,8 @@ import type { EegSample } from "@/lib/types";
 
 const W = 1000;
 const H = 200;
-const PAD = 16;
+const PAD = 16; // sides + bottom inset
+const TOP = 38; // reserved top band so the legend + ▲hook/▲CTA labels are never covered by the signal
 
 export default function Waveform({ samples }: { samples: EegSample[] }) {
   if (samples.length < 2) {
@@ -31,7 +32,7 @@ export default function Waveform({ samples }: { samples: EegSample[] }) {
   const range = max - min || 1;
 
   const X = (i: number) => PAD + (i / (samples.length - 1)) * (W - 2 * PAD);
-  const Y = (v: number) => H - PAD - ((v - min) / range) * (H - 2 * PAD);
+  const Y = (v: number) => H - PAD - ((v - min) / range) * (H - PAD - TOP);
 
   const pts = (vals: number[]) => vals.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
   const realLine = pts(real);
