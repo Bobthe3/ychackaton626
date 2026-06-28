@@ -45,10 +45,10 @@ export default function LivePage() {
         <span className="ml-auto text-sm text-neutral-400">Holly 🧠</span>
       </div>
 
-      {/* video + characteristics */}
-      <div className="flex flex-wrap items-start gap-8">
+      {/* video + characteristics — 50/50 split (video left, info right) */}
+      <div className="grid grid-cols-2 items-start gap-8">
         {/* video stage — fixed height, fits a 9:16 reel OR a 16:9 clip via object-contain */}
-        <div className="flex h-[440px] shrink-0 items-center justify-center">
+        <div className="flex h-[440px] items-center justify-center">
           {isReal ? (
             <video
               src={video!.url}
@@ -66,8 +66,8 @@ export default function LivePage() {
           )}
         </div>
 
-        {/* info column — capped so it doesn't stretch */}
-        <div className="w-full max-w-sm space-y-3">
+        {/* info column — fills its 50% half */}
+        <div className="w-full space-y-3">
           <div>
             <div className="text-xs uppercase tracking-wide text-neutral-500">now playing</div>
             <div className="mt-1 text-lg font-semibold leading-tight">{title ?? "—"}</div>
