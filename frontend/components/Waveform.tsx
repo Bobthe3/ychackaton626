@@ -8,8 +8,17 @@ import type { EegSample } from "@/lib/types";
 
 const W = 1000;
 const H = 200;
-const PAD = 16; // sides + bottom inset
+const LEFT = 34; // y-axis gutter for ratio tick labels
+const RIGHT = 16;
 const TOP = 38; // reserved top band so the legend + ▲hook/▲CTA labels are never covered by the signal
+const BOTTOM = 22; // x-axis gutter for time tick labels
+const NY = 4; // horizontal gridlines
+const NX = 5; // vertical gridlines
+
+function clock(ms: number) {
+  const s = Math.max(0, Math.round(ms / 1000));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+}
 
 export default function Waveform({ samples }: { samples: EegSample[] }) {
   if (samples.length < 2) {
@@ -31,13 +40,23 @@ export default function Waveform({ samples }: { samples: EegSample[] }) {
   const max = Math.max(...all);
   const range = max - min || 1;
 
-  const X = (i: number) => PAD + (i / (samples.length - 1)) * (W - 2 * PAD);
-  const Y = (v: number) => H - PAD - ((v - min) / range) * (H - PAD - TOP);
+  const X = (i: number) => LEFT + (i / (samples.length - 1)) * (W - LEFT - RIGHT);
+  const Y = (v: number) => H - BOTTOM - ((v - min) / range) * (H - BOTTOM - TOP);
 
   const pts = (vals: number[]) => vals.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
   const realLine = pts(real);
   const predictLine = pts(predict);
-  const area = `${PAD},${H - PAD} ${realLine} ${(W - PAD)},${H - PAD}`;
+  const area = `${LEFT},${H - BOTTOM} ${realLine} ${(W - RIGHT)},${H - BOTTOM}`;
+
+  // background grid — horizontal ratio ticks (y) + vertical time ticks (x)
+  const yTicks = Array.from({ length: NY + 1 }, (_, k) => {
+    const v = min + (k / NY) * range;
+    return { v, y: Y(v) };
+  });
+  const xTicks = Array.from({ length: NX + 1 }, (_, k) => {
+    const i = Math.round((k / NX) * (samples.length - 1));
+    return { x: X(i), t: samples[i].video_t_ms };
+  });
 
   // top spikes on the REAL signal = local maxima in the upper band
   const labels: { x: number; y: number; tag: string }[] = [];
@@ -69,6 +88,22 @@ export default function Waveform({ samples }: { samples: EegSample[] }) {
           </feMerge>
         </filter>
       </defs>
+
+      {/* background grid + ratio / time ticks (behind the line) */}
+      <g>
+        {yTicks.map((t, k) => (
+          <g key={`y${k}`}>
+            <line x1={LEFT} y1={t.y} x2={W - RIGHT} y2={t.y} stroke="#ffffff" strokeOpacity="0.06" strokeWidth="1" />
+            <text x={LEFT - 5} y={t.y + 3} fill="#64748b" fontSize="9" textAnchor="end">{t.v.toFixed(2)}</text>
+          </g>
+        ))}
+        {xTicks.map((t, k) => (
+          <g key={`x${k}`}>
+            <line x1={t.x} y1={TOP} x2={t.x} y2={H - BOTTOM} stroke="#ffffff" strokeOpacity="0.05" strokeWidth="1" />
+            <text x={t.x} y={H - BOTTOM + 13} fill="#64748b" fontSize="9" textAnchor={k === 0 ? "start" : k === NX ? "end" : "middle"}>{clock(t.t)}</text>
+          </g>
+        ))}
+      </g>
 
       <polygon points={area} fill="url(#wf)" />
 
