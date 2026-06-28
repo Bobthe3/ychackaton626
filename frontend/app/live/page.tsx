@@ -81,7 +81,7 @@ export default function LivePage() {
               {video?.metadata.creator} · {video ? fmt((video.metadata.duration_ms * 2) / 3) : "0:00"} / {video ? fmt(video.metadata.duration_ms) : "0:00"}
             </div>
           </div>
-          {video && <CharacteristicsPanel video={video} />}
+          {video && <CharacteristicsPanel video={video} videoRef={videoRef} />}
           <InsightTabs />
         </div>
       </div>
