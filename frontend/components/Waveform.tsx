@@ -21,26 +21,22 @@ function clock(ms: number) {
 }
 
 export default function Waveform({ samples }: { samples: EegSample[] }) {
-  if (samples.length < 2) {
-    return (
-      <div className="flex h-[200px] items-center justify-center rounded-xl border border-neutral-800 bg-neutral-900/60 text-sm text-neutral-600">
-        waiting for signal…
-      </div>
-    );
-  }
+  // Before the clip plays there's no signal yet — we still render the full grid
+  // + axes (just no line) so the feature reads as "live monitor, armed".
+  const hasData = samples.length >= 2;
 
   const real = samples.map((s) => s.interest_score);
   const hasPredict = samples.some((s) => typeof s.predict_score === "number");
   // predict falls back to real where absent so the line stays continuous
   const predict = samples.map((s) => (typeof s.predict_score === "number" ? s.predict_score : s.interest_score));
 
-  // auto-scale across both layers
+  // auto-scale across both layers; default to 0..1 before any data
   const all = hasPredict ? real.concat(predict) : real;
-  const min = Math.min(...all);
-  const max = Math.max(...all);
+  const min = hasData ? Math.min(...all) : 0;
+  const max = hasData ? Math.max(...all) : 1;
   const range = max - min || 1;
 
-  const X = (i: number) => LEFT + (i / (samples.length - 1)) * (W - LEFT - RIGHT);
+  const X = (i: number) => LEFT + (i / Math.max(1, samples.length - 1)) * (W - LEFT - RIGHT);
   const Y = (v: number) => H - BOTTOM - ((v - min) / range) * (H - BOTTOM - TOP);
 
   const pts = (vals: number[]) => vals.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
@@ -48,14 +44,17 @@ export default function Waveform({ samples }: { samples: EegSample[] }) {
   const predictLine = pts(predict);
   const area = `${LEFT},${H - BOTTOM} ${realLine} ${(W - RIGHT)},${H - BOTTOM}`;
 
-  // background grid — horizontal ratio ticks (y) + vertical time ticks (x)
+  // background grid — horizontal ratio ticks (y) + vertical time ticks (x).
+  // Empty state falls back to 0.00–1.00 on y and 0:00–0:30 on x.
   const yTicks = Array.from({ length: NY + 1 }, (_, k) => {
     const v = min + (k / NY) * range;
     return { v, y: Y(v) };
   });
   const xTicks = Array.from({ length: NX + 1 }, (_, k) => {
-    const i = Math.round((k / NX) * (samples.length - 1));
-    return { x: X(i), t: samples[i].video_t_ms };
+    const frac = k / NX;
+    const x = LEFT + frac * (W - LEFT - RIGHT);
+    const t = hasData ? samples[Math.round(frac * (samples.length - 1))].video_t_ms : frac * 30000;
+    return { x, t };
   });
 
   // top spikes on the REAL signal = local maxima in the upper band
@@ -105,45 +104,53 @@ export default function Waveform({ samples }: { samples: EegSample[] }) {
         ))}
       </g>
 
-      <polygon points={area} fill="url(#wf)" />
+      {/* legend — shown even when idle so the predict/real feature reads up-front */}
+      <g fontSize="11" transform={`translate(${W - 150}, 16)`} opacity={hasData ? 1 : 0.5}>
+        <line x1="0" y1="0" x2="16" y2="0" stroke="#2f8fd6" strokeWidth="1.5" strokeDasharray="3 6" opacity="0.85" />
+        <text x="20" y="4" fill="#6fb6e6">predict</text>
+        <line x1="74" y1="0" x2="90" y2="0" stroke="#d6f7ff" strokeWidth="2.75" />
+        <text x="94" y="4" fill="#d6f7ff">real</text>
+      </g>
 
-      {/* predict layer — deeper saturated blue, dashed: clearly the lower/background layer */}
-      {hasPredict && (
-        <polyline
-          points={predictLine}
-          fill="none"
-          stroke="#2f8fd6"
-          strokeWidth="1.5"
-          strokeDasharray="3 6"
-          strokeLinejoin="round"
-          opacity="0.85"
-        />
+      {!hasData && (
+        <text x={W / 2} y={(TOP + H - BOTTOM) / 2} fill="#475569" fontSize="11" textAnchor="middle">
+          ▶ press play — live brainwave appears here
+        </text>
       )}
 
-      {/* real layer — fluorescent cool white-blue, glowing, on top */}
-      <polyline points={realLine} fill="none" stroke="#d6f7ff" strokeWidth="2.75" strokeLinejoin="round" filter="url(#glow)" />
+      {hasData && (
+        <>
+          <polygon points={area} fill="url(#wf)" />
 
-      {/* legend */}
-      {hasPredict && (
-        <g fontSize="11" transform={`translate(${W - 150}, 16)`}>
-          <line x1="0" y1="0" x2="16" y2="0" stroke="#2f8fd6" strokeWidth="1.5" strokeDasharray="3 6" opacity="0.85" />
-          <text x="20" y="4" fill="#6fb6e6">predict</text>
-          <line x1="74" y1="0" x2="90" y2="0" stroke="#d6f7ff" strokeWidth="2.75" />
-          <text x="94" y="4" fill="#d6f7ff">real</text>
-        </g>
+          {/* predict layer — deeper saturated blue, dashed: clearly the lower/background layer */}
+          {hasPredict && (
+            <polyline
+              points={predictLine}
+              fill="none"
+              stroke="#2f8fd6"
+              strokeWidth="1.5"
+              strokeDasharray="3 6"
+              strokeLinejoin="round"
+              opacity="0.85"
+            />
+          )}
+
+          {/* real layer — fluorescent cool white-blue, glowing, on top */}
+          <polyline points={realLine} fill="none" stroke="#d6f7ff" strokeWidth="2.75" strokeLinejoin="round" filter="url(#glow)" />
+
+          {top.map((p, i) => (
+            <g key={i}>
+              <circle cx={p.x} cy={p.y} r="4" fill="#d6f7ff" filter="url(#glow)" />
+              <text x={p.x} y={p.y - 10} fill="#d6f7ff" fontSize="12" textAnchor="middle">▲{p.tag}</text>
+            </g>
+          ))}
+
+          {/* live dot on the real signal */}
+          <circle cx={X(samples.length - 1)} cy={Y(lastReal)} r="5" fill="#fff">
+            <animate attributeName="r" values="4;7;4" dur="1.2s" repeatCount="indefinite" />
+          </circle>
+        </>
       )}
-
-      {top.map((p, i) => (
-        <g key={i}>
-          <circle cx={p.x} cy={p.y} r="4" fill="#d6f7ff" filter="url(#glow)" />
-          <text x={p.x} y={p.y - 10} fill="#d6f7ff" fontSize="12" textAnchor="middle">▲{p.tag}</text>
-        </g>
-      ))}
-
-      {/* live dot on the real signal */}
-      <circle cx={X(samples.length - 1)} cy={Y(lastReal)} r="5" fill="#fff">
-        <animate attributeName="r" values="4;7;4" dur="1.2s" repeatCount="indefinite" />
-      </circle>
     </svg>
   );
 }
