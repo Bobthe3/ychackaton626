@@ -104,45 +104,53 @@ export default function Waveform({ samples }: { samples: EegSample[] }) {
         ))}
       </g>
 
-      <polygon points={area} fill="url(#wf)" />
+      {/* legend — shown even when idle so the predict/real feature reads up-front */}
+      <g fontSize="11" transform={`translate(${W - 150}, 16)`} opacity={hasData ? 1 : 0.5}>
+        <line x1="0" y1="0" x2="16" y2="0" stroke="#2f8fd6" strokeWidth="1.5" strokeDasharray="3 6" opacity="0.85" />
+        <text x="20" y="4" fill="#6fb6e6">predict</text>
+        <line x1="74" y1="0" x2="90" y2="0" stroke="#d6f7ff" strokeWidth="2.75" />
+        <text x="94" y="4" fill="#d6f7ff">real</text>
+      </g>
 
-      {/* predict layer — deeper saturated blue, dashed: clearly the lower/background layer */}
-      {hasPredict && (
-        <polyline
-          points={predictLine}
-          fill="none"
-          stroke="#2f8fd6"
-          strokeWidth="1.5"
-          strokeDasharray="3 6"
-          strokeLinejoin="round"
-          opacity="0.85"
-        />
+      {!hasData && (
+        <text x={W / 2} y={(TOP + H - BOTTOM) / 2} fill="#475569" fontSize="11" textAnchor="middle">
+          ▶ press play — live brainwave appears here
+        </text>
       )}
 
-      {/* real layer — fluorescent cool white-blue, glowing, on top */}
-      <polyline points={realLine} fill="none" stroke="#d6f7ff" strokeWidth="2.75" strokeLinejoin="round" filter="url(#glow)" />
+      {hasData && (
+        <>
+          <polygon points={area} fill="url(#wf)" />
 
-      {/* legend */}
-      {hasPredict && (
-        <g fontSize="11" transform={`translate(${W - 150}, 16)`}>
-          <line x1="0" y1="0" x2="16" y2="0" stroke="#2f8fd6" strokeWidth="1.5" strokeDasharray="3 6" opacity="0.85" />
-          <text x="20" y="4" fill="#6fb6e6">predict</text>
-          <line x1="74" y1="0" x2="90" y2="0" stroke="#d6f7ff" strokeWidth="2.75" />
-          <text x="94" y="4" fill="#d6f7ff">real</text>
-        </g>
+          {/* predict layer — deeper saturated blue, dashed: clearly the lower/background layer */}
+          {hasPredict && (
+            <polyline
+              points={predictLine}
+              fill="none"
+              stroke="#2f8fd6"
+              strokeWidth="1.5"
+              strokeDasharray="3 6"
+              strokeLinejoin="round"
+              opacity="0.85"
+            />
+          )}
+
+          {/* real layer — fluorescent cool white-blue, glowing, on top */}
+          <polyline points={realLine} fill="none" stroke="#d6f7ff" strokeWidth="2.75" strokeLinejoin="round" filter="url(#glow)" />
+
+          {top.map((p, i) => (
+            <g key={i}>
+              <circle cx={p.x} cy={p.y} r="4" fill="#d6f7ff" filter="url(#glow)" />
+              <text x={p.x} y={p.y - 10} fill="#d6f7ff" fontSize="12" textAnchor="middle">▲{p.tag}</text>
+            </g>
+          ))}
+
+          {/* live dot on the real signal */}
+          <circle cx={X(samples.length - 1)} cy={Y(lastReal)} r="5" fill="#fff">
+            <animate attributeName="r" values="4;7;4" dur="1.2s" repeatCount="indefinite" />
+          </circle>
+        </>
       )}
-
-      {top.map((p, i) => (
-        <g key={i}>
-          <circle cx={p.x} cy={p.y} r="4" fill="#d6f7ff" filter="url(#glow)" />
-          <text x={p.x} y={p.y - 10} fill="#d6f7ff" fontSize="12" textAnchor="middle">▲{p.tag}</text>
-        </g>
-      ))}
-
-      {/* live dot on the real signal */}
-      <circle cx={X(samples.length - 1)} cy={Y(lastReal)} r="5" fill="#fff">
-        <animate attributeName="r" values="4;7;4" dur="1.2s" repeatCount="indefinite" />
-      </circle>
     </svg>
   );
 }

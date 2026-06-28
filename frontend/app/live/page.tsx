@@ -97,16 +97,14 @@ export default function LivePage() {
         </div>
       </div>
 
-      {/* waveform — only after play */}
-      {started && (
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs uppercase tracking-wide text-neutral-500">interest · theta/beta · live</span>
-            <span className="text-sm tabular-nums text-[#9fe9ff]">{latest ? latest.interest_score.toFixed(2) : "—"}</span>
-          </div>
-          <Waveform samples={samples} />
+      {/* waveform — grid always visible (shows the feature); line streams in on play */}
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-xs uppercase tracking-wide text-neutral-500">interest · theta/beta · live</span>
+          <span className="text-sm tabular-nums text-[#9fe9ff]">{latest ? latest.interest_score.toFixed(2) : "—"}</span>
         </div>
-      )}
+        <Waveform samples={samples} />
+      </div>
     </div>
   );
 }
