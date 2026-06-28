@@ -93,7 +93,7 @@ export default function LivePage() {
       <div>
         <div className="mb-2 flex items-center justify-between">
           <span className="text-xs uppercase tracking-wide text-neutral-500">interest · theta/beta · live</span>
-          <span className="text-sm tabular-nums text-green-400">{latest ? latest.interest_score.toFixed(2) : "—"}</span>
+          <span className="text-sm tabular-nums text-sky-400">{latest ? latest.interest_score.toFixed(2) : "—"}</span>
         </div>
         <Waveform samples={samples} />
       </div>

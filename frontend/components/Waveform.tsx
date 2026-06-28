@@ -57,8 +57,8 @@ export default function Waveform({ samples }: { samples: EegSample[] }) {
     <svg viewBox={`0 0 ${W} ${H}`} className="h-[200px] w-full rounded-xl border border-neutral-800 bg-neutral-900/60">
       <defs>
         <linearGradient id="wf" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#4ade80" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#4ade80" stopOpacity="0" />
+          <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
         </linearGradient>
       </defs>
 
@@ -69,7 +69,7 @@ export default function Waveform({ samples }: { samples: EegSample[] }) {
         <polyline
           points={predictLine}
           fill="none"
-          stroke="#4ade80"
+          stroke="#38bdf8"
           strokeWidth="1.75"
           strokeDasharray="5 5"
           strokeLinejoin="round"
@@ -78,22 +78,22 @@ export default function Waveform({ samples }: { samples: EegSample[] }) {
       )}
 
       {/* real layer — bright solid */}
-      <polyline points={realLine} fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinejoin="round" />
+      <polyline points={realLine} fill="none" stroke="#38bdf8" strokeWidth="2.5" strokeLinejoin="round" />
 
       {/* legend */}
       {hasPredict && (
         <g fontSize="11" transform={`translate(${W - 150}, 16)`}>
-          <line x1="0" y1="0" x2="16" y2="0" stroke="#4ade80" strokeWidth="1.75" strokeDasharray="5 5" opacity="0.55" />
-          <text x="20" y="4" fill="#4ade80" opacity="0.7">predict</text>
-          <line x1="74" y1="0" x2="90" y2="0" stroke="#4ade80" strokeWidth="2.5" />
-          <text x="94" y="4" fill="#86efac">real</text>
+          <line x1="0" y1="0" x2="16" y2="0" stroke="#38bdf8" strokeWidth="1.75" strokeDasharray="5 5" opacity="0.55" />
+          <text x="20" y="4" fill="#38bdf8" opacity="0.7">predict</text>
+          <line x1="74" y1="0" x2="90" y2="0" stroke="#38bdf8" strokeWidth="2.5" />
+          <text x="94" y="4" fill="#7dd3fc">real</text>
         </g>
       )}
 
       {top.map((p, i) => (
         <g key={i}>
-          <circle cx={p.x} cy={p.y} r="4" fill="#4ade80" />
-          <text x={p.x} y={p.y - 10} fill="#86efac" fontSize="12" textAnchor="middle">▲{p.tag}</text>
+          <circle cx={p.x} cy={p.y} r="4" fill="#38bdf8" />
+          <text x={p.x} y={p.y - 10} fill="#7dd3fc" fontSize="12" textAnchor="middle">▲{p.tag}</text>
         </g>
       ))}
 
