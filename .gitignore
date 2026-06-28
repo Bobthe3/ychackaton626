@@ -89,11 +89,14 @@ env/
 *.egg-info/
 .ipynb_checkpoints/
 
-# big media / model artifacts — keep bundled mock clips (assets/videos) tracked
+# big media / model artifacts — keep bundled mock clips tracked
 *.mp4
 *.edf
 *.bdf
 !assets/videos/*.mp4
+# demo clips used by the web frontend MUST be committed so they play after a
+# fresh clone/pull on any machine (main now-playing clip + related-clip grid)
+!frontend/public/clips/**/*.mp4
 backend/model/checkpoints/
 backend/data/
 
