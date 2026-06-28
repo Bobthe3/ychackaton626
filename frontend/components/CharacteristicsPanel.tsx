@@ -1,27 +1,37 @@
 "use client";
+import type { RefObject } from "react";
 import type { Video } from "@/lib/types";
-import ColorBar from "./ColorBar";
-import colorProfiles from "@/public/color-profiles.json";
+import MovieBarcode from "./MovieBarcode";
 
-// The 5-field characteristics panel (Screen 1). color_profile is merged in client-side.
-export default function CharacteristicsPanel({ video }: { video: Video }) {
-  const colors = (colorProfiles as Record<string, string[]>)[video.video_id] ?? [];
+// The 5-field characteristics panel (Screen 1). color_profile is extracted client-side,
+// live, as a movie-barcode strip from the REAL playing video (via videoRef).
+export default function CharacteristicsPanel({
+  video,
+  videoRef,
+}: {
+  video: Video;
+  videoRef?: RefObject<HTMLVideoElement | null>;
+}) {
   const c = video.characteristics;
   return (
-    <div className="space-y-1 rounded-lg border border-neutral-800 p-3 text-sm">
-      <Row label="color"><ColorBar colors={colors} /></Row>
-      <Row label="cuts">{c.cut_count}</Row>
-      <Row label="audio">{c.audio}</Row>
-      <Row label="subs">{c.subtitles ? "yes" : "no"}</Row>
-      <Row label="text">“{c.on_screen_text}”</Row>
+    <div className="space-y-2.5 rounded-xl border border-neutral-800 bg-neutral-900/40 p-4 text-sm">
+      <div className="mb-1 text-xs uppercase tracking-wide text-neutral-500">characteristics</div>
+      <div className="reveal flex items-center gap-3" style={{ animationDelay: "0ms" }}>
+        <span className="w-14 shrink-0 text-neutral-500">color</span>
+        <MovieBarcode videoRef={videoRef} seed={video.video_id} height={22} />
+      </div>
+      <Row label="cuts" delay={140}><span className="tabular-nums">{c.cut_count}</span></Row>
+      <Row label="audio" delay={280}>{c.audio}</Row>
+      <Row label="subs" delay={420}>{c.subtitles ? "yes" : "no"}</Row>
+      <Row label="text" delay={560}><span className="text-neutral-300">“{c.on_screen_text}”</span></Row>
     </div>
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({ label, children, delay = 0 }: { label: string; children: React.ReactNode; delay?: number }) {
   return (
-    <div className="flex gap-3">
-      <span className="w-12 text-neutral-500">{label}</span>
+    <div className="reveal flex items-center gap-3" style={{ animationDelay: `${delay}ms` }}>
+      <span className="w-14 shrink-0 text-neutral-500">{label}</span>
       <span>{children}</span>
     </div>
   );
