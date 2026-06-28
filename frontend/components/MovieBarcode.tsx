@@ -12,7 +12,7 @@
 import { useEffect, useState, type RefObject } from "react";
 
 const MAX = 200; // stripes kept on screen (older ones scroll off the left)
-const TICK = 140; // ms per stripe
+const TICK = 120; // ms per stripe
 
 export default function MovieBarcode({
   videoRef,
@@ -37,47 +37,31 @@ export default function MovieBarcode({
     canvas.height = 16;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
-    // synth state: HSL random-walk constrained to a film-palette band
-    let h = 32;
-    let s = 0.18;
-    let l = 0.3;
-    const rnd = seedRand(seed);
-
+    // Sample the REAL current video frame's average color. Returns null if the
+    // video isn't playing/decodable yet — we never synthesize fake colors.
     const sampleVideo = (): string | null => {
       const v = videoRef?.current;
-      if (!v || v.readyState < 2 || v.videoWidth === 0 || !ctx) return null;
+      if (!v || v.paused || v.readyState < 2 || v.videoWidth === 0 || !ctx) return null;
       try {
         ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
         const d = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-        let r = 0;
-        let g = 0;
-        let b = 0;
+        let r = 0, g = 0, b = 0;
         const n = d.length / 4;
         for (let i = 0; i < d.length; i += 4) {
           r += d[i];
           g += d[i + 1];
           b += d[i + 2];
         }
-        return `rgb(${Math.round(r / n)} ${Math.round(g / n)} ${Math.round(b / n)})`;
+        return enhance(r / n, g / n, b / n);
       } catch {
-        return null; // tainted canvas (cross-origin frame) → fall back to synth
+        return null; // tainted canvas (cross-origin frame)
       }
-    };
-
-    const synth = (): string => {
-      l = clamp(l + (rnd() - 0.5) * 0.18, 0.06, 0.86); // brightness drifts
-      s = clamp(s + (rnd() - 0.5) * 0.08, 0.04, 0.5); // saturation drifts
-      if (rnd() < 0.06) {
-        h = 200 + (rnd() - 0.5) * 30; // sporadic cool blue/teal accent
-      } else {
-        h = h < 60 ? h + (rnd() - 0.5) * 12 : h + (40 - h) * 0.3; // ease back to warm
-      }
-      return `hsl(${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%)`;
     };
 
     const id = setInterval(() => {
       if (cancelled) return;
-      const color = sampleVideo() ?? synth();
+      const color = sampleVideo();
+      if (!color) return; // only real frames; nothing until the clip plays
       setStripes((prev) => {
         const next = prev.length >= MAX ? prev.slice(prev.length - MAX + 1) : prev.slice();
         next.push(color);
@@ -109,18 +93,43 @@ function clamp(v: number, lo: number, hi: number) {
   return Math.min(hi, Math.max(lo, v));
 }
 
-// per-seed PRNG mixed with Math.random, so each clip's synth differs yet stays lively
-function seedRand(seed?: string) {
-  let x = 2166136261 >>> 0;
-  for (const ch of seed ?? "x") {
-    x ^= ch.charCodeAt(0);
-    x = Math.imul(x, 16777619);
+// Gently lift the real frame color so brightness/cut variation is visible,
+// while keeping the actual hue — it should look like the clip, not a rainbow.
+function enhance(r: number, g: number, b: number): string {
+  const [h, s, l] = rgb2hsl(r, g, b);
+  const s2 = clamp(s * 1.5, 0, 1); // mild saturation lift, true hue
+  const l2 = clamp(0.5 + (l - 0.5) * 1.3, 0.03, 0.97); // mild contrast stretch
+  const [rr, gg, bb] = hsl2rgb(h, s2, l2);
+  return `rgb(${rr} ${gg} ${bb})`;
+}
+
+function rgb2hsl(r: number, g: number, b: number): [number, number, number] {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  let h = 0, s = 0;
+  const d = max - min;
+  if (d !== 0) {
+    s = d / (1 - Math.abs(2 * l - 1));
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
   }
-  return () => {
-    x ^= x << 13;
-    x ^= x >>> 17;
-    x ^= x << 5;
-    x >>>= 0;
-    return (x / 4294967296 + Math.random()) % 1;
-  };
+  return [h, s, l];
+}
+
+function hsl2rgb(h: number, s: number, l: number): [number, number, number] {
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  return [Math.round((r + m) * 255), Math.round((g + m) * 255), Math.round((b + m) * 255)];
 }

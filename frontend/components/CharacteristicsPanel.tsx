@@ -16,21 +16,21 @@ export default function CharacteristicsPanel({
   return (
     <div className="space-y-2.5 rounded-xl border border-neutral-800 bg-neutral-900/40 p-4 text-sm">
       <div className="mb-1 text-xs uppercase tracking-wide text-neutral-500">characteristics</div>
-      <div className="flex items-center gap-3">
+      <div className="reveal flex items-center gap-3" style={{ animationDelay: "0ms" }}>
         <span className="w-14 shrink-0 text-neutral-500">color</span>
         <MovieBarcode videoRef={videoRef} seed={video.video_id} height={22} />
       </div>
-      <Row label="cuts"><span className="tabular-nums">{c.cut_count}</span></Row>
-      <Row label="audio">{c.audio}</Row>
-      <Row label="subs">{c.subtitles ? "yes" : "no"}</Row>
-      <Row label="text"><span className="text-neutral-300">“{c.on_screen_text}”</span></Row>
+      <Row label="cuts" delay={140}><span className="tabular-nums">{c.cut_count}</span></Row>
+      <Row label="audio" delay={280}>{c.audio}</Row>
+      <Row label="subs" delay={420}>{c.subtitles ? "yes" : "no"}</Row>
+      <Row label="text" delay={560}><span className="text-neutral-300">“{c.on_screen_text}”</span></Row>
     </div>
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({ label, children, delay = 0 }: { label: string; children: React.ReactNode; delay?: number }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className="reveal flex items-center gap-3" style={{ animationDelay: `${delay}ms` }}>
       <span className="w-14 shrink-0 text-neutral-500">{label}</span>
       <span>{children}</span>
     </div>
